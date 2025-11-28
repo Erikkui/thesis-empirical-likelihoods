@@ -11,7 +11,7 @@ function cdf_do( D, data::Dict{Symbol, Any} )
     end
 
     # If bins are found, calculate ecdfs and return them; otherwise only return features
-    if isassigned( data[:binss], 1 )
+    if data[:bins_done]
         bins = data[:binss]
         nbin = data[:nbin]
 

@@ -1,6 +1,10 @@
 
 function blowfly_main( data, options, model; datafile = nothing )
 
+    # Generate run identifier
+    identifier = generate_identifier( CASE_NAME, data )
+    println( "Starting run ", identifier )
+
     if data[:chamfer] == 0 && data[:eCDF] == 0
         error( "No summary statistics to compute. Set at least either chamfer or eCDF to 1." )
     end
@@ -25,10 +29,6 @@ function blowfly_main( data, options, model; datafile = nothing )
     end
 
     data[:data_dim] = size( data[:R0][1], 1 )  # Number of dimensions in the data
-
-    # Generate run identifier
-    identifier = generate_identifier( CASE_NAME, data )
-    println( "Starting run ", identifier )
 
     # Create the likelihood
     data, _ = create_likelihood( data )

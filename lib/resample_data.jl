@@ -67,21 +67,19 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
                 maxs[jj] = min( maxs[jj], M1 )
             end
 
-            if ii == nsamp  # Only at the nsampth sample, compute bins
+            if ii == nsamp  # Only at the nsamp'th sample, compute bins
 
                 minmax[1, :] = mins
                 minmax[2, :] = maxs
-                data[:minmax] = minmax
+                # data[:minmax] = minmax
 
-                dataL = deepcopy(data)
-                data[:binss] = Vector{Vector{Float64}}(undef, nL)
-                for LL in 1:nL
-                    dataL[:minmax] = data[:minmax][:, LL]
+                for jj in 1:nL
+                    data[:minmax] = minmax[:, jj]
                     if data[:uni] == "yax"
-                        dataL[:r] = cdf_ii[LL]    # data[:r][LL] = CIL/ID feature vector
+                        data[:r] = cdf_ii[jj]    # data[:r][LL] = signal/CIL/ID feature vector
                     end
-                    bins = bin_select(dataL)
-                    data[:binss][LL] = bins
+                    bins = bin_select( data )
+                    push!( data[:bins][jj].bins, bins )
                 end
             end
 
