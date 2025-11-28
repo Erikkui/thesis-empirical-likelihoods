@@ -2,12 +2,27 @@
 function create_likelihood( data::Dict{Symbol, Any} )
     # Create likelihood either by resampling or by epochs
 
+    # Check if signal-only likelihood is to be used
+    if -2 in data[:LL]
+        data[:signal_only] = true
+    end
+
+    # Check if kdtree needs to be created: either chamfer = 1 or ID features are used
+    kn_c = 0
+    kn_e = 0
+    if data[:chamfer] == 1
+        kn_c = length( data[:chamfer_k] )
+    end
+    if data[:eCDF] == 1
+        kn_e = maximum( data[:LL] )
+    end
+    kn = max( kn_c, kn_e )  # Number of neighbors to find if needed
+    create_kdtree = kn_e > 0 || data[:chamfer] == 1 ? true : false
+    data[:create_kdtree] = create_kdtree
+    data[:kn] = kn
 
     if data[:resample] == 1     # Make bins and CDF/chamfer dist by resampling
         # If using resampling, store all R0 in one big matrix
-        if -2 in data[:LL]
-            data[:signal_only] = true
-        end
 
         # Concatenate all nepo R0 matrices
         data[:R0_all] = [ hcat( data[:R0]... ) ]
@@ -16,25 +31,6 @@ function create_likelihood( data::Dict{Symbol, Any} )
             data[:R0_diff_all] = [ hcat( data[:R0_diff][ii]... ) for ii in eachindex(data[:R0_diff]) ]
             data[:R0_all] = [ data[:R0_all]..., data[:R0_diff_all]... ]
         end
-
-        # Check if kdtree needs to be created: either chamfer = 1 or ID features are used
-        kn_c = 0
-        kn_e = 0
-        if data[:chamfer] == 1
-            kn_c = length( data[:chamfer_k] )
-        end
-        if data[:eCDF] == 1
-            kn_e = maximum( data[:LL] )
-        end
-
-        if data[:chamfer] == 0 && data[:eCDF] == 0
-            error( "No summary statistics to compute. Set at least either chamfer or eCDF to 1." )
-        end
-
-        kn = max( kn_c, kn_e )  # Number of neighbors to find if needed
-        create_kdtree = kn_e > 0 || data[:chamfer] == 1 ? true : false
-        data[:create_kdtree] = create_kdtree
-        data[:kn] = kn
 
         if data[:case] == "gsl"
             bins_all = Vector{Vector{Float64}}(undef, 0)

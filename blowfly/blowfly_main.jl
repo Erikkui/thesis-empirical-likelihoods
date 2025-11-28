@@ -1,6 +1,10 @@
 
 function blowfly_main( data, options, model; datafile = nothing )
 
+    if data[:chamfer] == 0 && data[:eCDF] == 0
+        error( "No summary statistics to compute. Set at least either chamfer or eCDF to 1." )
+    end
+
     # Data generation or loading
     if data[:synthetic_data]   # Simulate nepo data sets
         data = create_synth_data( data )

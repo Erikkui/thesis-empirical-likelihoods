@@ -1,4 +1,4 @@
-function calculate_diffs( R, diff_order, dt; use_2D = false )
+function calculate_diffs( R, diff_order, dt)
 
     ndim, ndata = size(R)
     R0_diffs = Vector{ Matrix{Float64} }(undef, length(diff_order) )
@@ -14,15 +14,10 @@ function calculate_diffs( R, diff_order, dt; use_2D = false )
         R = diff_temp
 
         if dim in diff_order
-            if use_2D
-                padding = zeros(Float64, ndim, dim)
-                R0_diff_ii = hcat(padding, diff_temp, padding)
-                R0_diffs[ R0_diff_ind ] = R0_diff_ii
-            else
-                R0_diffs[ R0_diff_ind ] = diff_temp
-            end
+            R0_diffs[ R0_diff_ind ] = diff_temp
             R0_diff_ind += 1
         end
+
     end
 
     return R0_diffs

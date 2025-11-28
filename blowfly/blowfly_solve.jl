@@ -29,8 +29,11 @@ function blowfly_solve( theta, t; N_init = 180, burn_in = 20, mu = 1.0 )
 
     end
 
-    # Remove burn-in period and lag padding
-    N_burned = N[ 1:1, 1+lag+burn_in:end ]
+    # Remove initial lag from N
+    N = N[:, lag+1:end]
+
+    # Remove burn-in period
+    N_burned = N[ 1:1, 1+burn_in:end ]
 
     return N, N_burned
 end

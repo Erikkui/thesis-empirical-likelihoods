@@ -83,9 +83,9 @@ function run_blowfly()
     ssfun = like_eval
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
-    init = 180
-    N = 200
-    burn_in = 40    # Time after which the data is considered "stable"
+    init = 180  # Initial condition for synthetic data
+    N = 200     # Length of synthetic data
+    burn_in = 0    # Time after which the data is considered "stable"
     t = N+1  # Time vector from 0 to N
     nepo = 1
 
