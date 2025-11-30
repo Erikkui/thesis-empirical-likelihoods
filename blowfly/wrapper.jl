@@ -11,6 +11,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     chamfer = data[:chamfer]
     chamfer_k = data[:chamfer_k]
     eCDF = data[:eCDF]
+    bins = data[:bins]
     LL = data[:LL]
     nL = data[:nL]
     create_kdtree = data[:create_kdtree]
@@ -60,34 +61,41 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     end
 
     # Create eCDFs and chamfer distances for each simulations
-    for dd in eachindex(R0_all)
+    for dd in eachindex(R0_all) # Loop over data types: original and differences
         x = R0_all[dd]
         R_sim_dd = R_sim_all[dd]
+        data[:bins] = bins[dd]
+
 
         for (ii, y) in enumerate( eachrow( R_sim_dd ) )
             if -1 in data[:LL]          # Signal feature
-                cdfs_ii, chamfer_ii = create_summaries( y, data )
-                LL = LL[ 2:end ]  # Remove -1 for next features
-                cdfs_ii_2, chamfer_ii_2 = create_summaries( x, y, data, create_kdtree, kn )
-                LL = data[:LL]  # Reset LL
+                cdfs_ii, _ = empcdf( y, nx=data[:nbin], x=data[:bins][1] )
+                data[:LL] = data[:LL][2:end]
+                data[:bins] = data[:bins][2:end]
+                if ~isempty(LL)
+                    cdfs_ii_2, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+                end
+                data[:LL] = LL
+                data[:bins] = bins[dd]
 
-                cdfs_ii = hcat( cdfs_ii, cdfs_ii_2 )
-                chamfer_ii = hcat( chamfer_ii, chamfer_ii_2 )
-
+                cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
 
             else
                 cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
             end
 
             if eCDF == 1
-                cdfs[ ii, : ] = cdfs_ii
+                cdfs_inds = (dd-1)*data[:nbin]*nL+1:dd*data[:nbin]*nL
+                cdfs[ ii, cdfs_inds ] = cdfs_ii
             end
             if chamfer == 1
-                chamfer_dists[ ii, : ] = chamfer_ii
+                chamf_inds = (dd-1)*length( chamfer_k )+1:dd*length( chamfer_k )
+                chamfer_dists[ ii, chamf_inds ] = chamfer_ii
             end
 
         end
     end
+    data[:bins] = bins  # Reset bins in data dict
 
 
 

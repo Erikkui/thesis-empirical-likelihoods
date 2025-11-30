@@ -59,10 +59,10 @@ function run_blowfly()
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    LL = [ -1, 0, 1, 2 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2, 3] # Neighbors to consider for chamfer distance
-    nsim = 10   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nsim = 20   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
     nrep = 1  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
@@ -72,7 +72,7 @@ function run_blowfly()
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 1000   # MCMC chain length
+    nsimu = 5000   # MCMC chain length
     update_int = 30
     adapt_int = 50
     npar = length(theta)

@@ -11,7 +11,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
     if data[:eCDF] == 1
         kn_e = maximum( data[:LL] )
     end
-    kn = max( kn_c, kn_e )  # Number of neighbors to find if needed
+    kn = max( kn_c, kn_e )+1  # Number of neighbors to find if needed
     create_kdtree = kn_e > 0 || data[:chamfer] == 1 ? true : false
     data[:create_kdtree] = create_kdtree
     data[:kn] = kn
@@ -19,11 +19,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
     # Initialize bin storage
     data[:bins] = Dict{Symbol, Any}()
     if data[:eCDF] == 1
-        data[:bins] = Vector{ NamedTuple }(undef, data[:nL])
-        for ii in 1:data[:nL]
-            tuple_ll = ( LL = data[:LL][ii], bins = Vector{ Vector{Float64} }( undef, 0) )
-            data[:bins][ii] = tuple_ll
-        end
+        data[:bins] = Vector{ Vector{ Vector{Float64} } }(undef, 1 + length(data[:diff_order])*data[:use_diff] )
     end
 
     if data[:resample] == 1     # Make bins and CDF/chamfer dist by resampling
@@ -44,21 +40,47 @@ function create_likelihood( data::Dict{Symbol, Any} )
             #TODO maybe to be deprecated
         else
             for ii in eachindex( data[:R0_all] )
-                data, _, _ = resample_data( data[:R0_all][ii], data )
+                data, _, bins = resample_data( data[:R0_all][ii], data )
+                data[:bins][ii] = bins
             end
             data[:bins_done] = true
 
+            LL = data[:LL]  # Store original LL
+            bins = data[:bins]  # Store bins for later use
+            ecdfs = Vector{ Float64 }(undef, 0)
+            chamfer_dists = Vector{ Float64 }(undef, 0)
             for ii in eachindex( data[:R0_all] )
                 RR_ii = data[:R0_all][ii]
                 ndata_R_ii = size( RR_ii, 2 )
+                data[:bins] = bins[ii]
+
                 x_ind = rand( 1:ndata_R_ii, ndata_R_ii )
                 unique!( x_ind )
                 y_ind = setdiff( 1:ndata_R_ii, x_ind )
                 x = @view RR_ii[ :, x_ind ]
                 y = @view RR_ii[ :, y_ind ]
-                summary_stats, c_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
-                data[:muu_data] = append!( summary_stats, c_ii )
+
+                if -1 in data[:LL]          # Signal feature
+                    cdfs_ii, _ = empcdf( vec(RR_ii), nx=data[:nbin], x=data[:bins][1] )
+                    data[:LL] = data[:LL][2:end]
+                    data[:bins] = data[:bins][2:end]
+                    if ~isempty(LL)
+                        cdfs_ii_2, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
+                    end
+                    data[:LL] = LL
+                    data[:bins] = bins[ii]
+
+                    cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
+
+                else
+                    cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+                end
+
+                append!( ecdfs, cdfs_ii )
+                append!( chamfer_dists, chamfer_ii )
             end
+            data[:muu_data] = vcat( ecdfs, chamfer_dists )
+            data[:bins] = bins  # Reset bins in data dict
 
             return data, nothing
         end

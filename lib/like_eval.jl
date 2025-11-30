@@ -27,7 +27,7 @@ function like_eval( theta, data::Dict{Symbol, Any} )
             return ss
         end
 
-        delta = vec( muu_ss ) - vec( muu_R0 )
+        delta = vec( muu_summaries ) - vec( muu_R0 )
 
         ss = (delta' * (C \ delta)) + logdet(C)
 

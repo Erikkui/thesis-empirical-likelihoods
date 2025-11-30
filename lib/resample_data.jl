@@ -55,9 +55,10 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
         y = @view R_all[ :, out_of_bag ]
 
         # Find bin limits and calculate bins OR only calculate summaries for this sample
+        bins = Vector{ Vector{Float64} }( undef, 0 )
         if ii <= nsamp && eCDF == 1
 
-            cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
+            cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
 
             # Min and max values for bin creation
             for jj in 1:nL
@@ -78,8 +79,8 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
                     if data[:uni] == "yax"
                         data[:r] = cdf_ii[jj]    # data[:r][LL] = signal/CIL/ID feature vector
                     end
-                    bins = bin_select( data )
-                    push!( data[:bins][jj].bins, bins )
+                    bins_nL = bin_select( data )
+                    push!( bins, bins_nL )
                 end
             end
 
