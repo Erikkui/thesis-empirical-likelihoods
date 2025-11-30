@@ -12,14 +12,14 @@ function cdf_do( D, data::Dict{Symbol, Any} )
 
     # If bins are found, calculate ecdfs and return them; otherwise only return features
     if data[:bins_done]
-        bins = data[:binss]
+        bins = data[:bins]
         nbin = data[:nbin]
 
         # Compute CDFs for given bins
         cdfs = Vector{Vector{Float64}}(undef, 0)
 
         for L in 1:nL
-            cdf_L, _ = empcdf( features[L], nx=nbin, x=bins[L] )
+            cdf_L, _ = empcdf( features[L], nx=nbin, x=bins[L].bins )
             push!(cdfs, vec(cdf_L))
         end
 

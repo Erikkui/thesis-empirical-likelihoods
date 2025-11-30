@@ -47,6 +47,19 @@ function create_likelihood( data::Dict{Symbol, Any} )
                 data, _, _ = resample_data( data[:R0_all][ii], data )
             end
             data[:bins_done] = true
+
+            for ii in eachindex( data[:R0_all] )
+                RR_ii = data[:R0_all][ii]
+                ndata_R_ii = size( RR_ii, 2 )
+                x_ind = rand( 1:ndata_R_ii, ndata_R_ii )
+                unique!( x_ind )
+                y_ind = setdiff( 1:ndata_R_ii, x_ind )
+                x = @view RR_ii[ :, x_ind ]
+                y = @view RR_ii[ :, y_ind ]
+                summary_stats, c_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
+                data[:muu_data] = append!( summary_stats, c_ii )
+            end
+
             return data, nothing
         end
 

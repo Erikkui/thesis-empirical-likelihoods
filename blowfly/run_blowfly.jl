@@ -51,7 +51,7 @@ function run_blowfly()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1, 2]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [1 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -62,12 +62,12 @@ function run_blowfly()
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2, 3] # Neighbors to consider for chamfer distance
-    nsim = 100   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
-    nrep = 10  # Number of resamplings from simulations (always > 1)
+    nsim = 10   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nrep = 1  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    resample = 1    # 0 for no resampling, 1 for resampling (possibly to be deprecated)
+    resample = 1    # 0 for no resampling, 1 for resampling only for bins, 2 for resampling for bins and data cov/mean
     res_nrep = 1   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
@@ -119,7 +119,6 @@ function run_blowfly()
         :nepo => nepo,
         :minmax => nothing,  # Is filled later
         :nL => length(LL),
-        :use_2D => use_2D,
     )
 
     mcmc_options = Dict{Symbol, Any}(

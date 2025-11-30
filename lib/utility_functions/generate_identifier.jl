@@ -31,10 +31,6 @@ function generate_identifier( model::String, data )
         identifier *= chamf
     end
 
-    if data[:use_2D]
-        identifier *= "_2D"
-    end
-
     if data[:synthetic_data]
         identifier *= "_synth"
     else

@@ -10,10 +10,10 @@ function like_eval( theta, data::Dict{Symbol, Any} )
     data, summary_stats = Wrapper( theta, data )
 
     # Compute the mean of the summary stats if not done already
-    muu_ss = size( summary_stats, 1 ) > 1 ? mean( summary_stats, dims=1 ) : summary_stats
+    muu_summaries = size( summary_stats, 1 ) > 1 ? mean( summary_stats, dims=1 ) : summary_stats
 
     C = data[:C]
-    muu_R0 = data[:muu]
+    muu_R0 = data[:muu_data]
 
     # Handle numerical issues
     if any(isnan, C)

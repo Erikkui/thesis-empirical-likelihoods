@@ -29,9 +29,9 @@ function mcmcrun2(model::Dict{Symbol, Any},
     chain[1, :] = params_old
 
     ss = ssfun( params_old, data )  # first SS value
-    # logprior_old = logprior( params_old )  # first logprior value
 
-    sschain[1] = ss#+logprior_old  # store first SS value
+
+    sschain[1] = ss
     status = 1
 
     iter = ProgressBar( 2:chain_length )
@@ -61,9 +61,7 @@ function mcmcrun2(model::Dict{Symbol, Any},
                 if n_rejected_stuck > update_int
                     ss_new = ssfun( params_old, data )  # update value at params_old
 
-                    # logprior_proposal = logprior( params_old  )
-
-                    ss = ss_new #+ logprior_proposal  # update ss
+                    ss = ss_new
                     chain[ ii, : ] = params_old
                     n_rejected_stuck = 0
                 else
