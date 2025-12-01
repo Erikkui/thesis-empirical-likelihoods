@@ -1,11 +1,7 @@
 
 function L3_main( data, options, model; datafile = nothing )
 
-    if data[:synthetic_data]   # Simulate nepo data sets
-        data = create_synth_data( data )
-    else
-        # To be added?
-    end
+    data = create_synth_data( data )
 
     data[:data_dim] = size( data[:R0][1], 1 )
 

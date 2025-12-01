@@ -1,8 +1,9 @@
 
 function create_summaries( x, y, data, make_kdtree, kn; same = false )
     # Create summary statistics: ecdf's and/or chamfer distances
-    x = reshape( x, 1, : )
-    y = reshape( y, 1, : )
+    data_dim = size( data[:R0_all][1], 1 )
+    x = reshape( x, data_dim, : )
+    y = reshape( y, data_dim, : )
 
     # Whether to build KDTree: always if chamfer used, or if ID features are used
     D_xy =  Vector{Vector{Float64}}(undef, 0)
@@ -11,6 +12,7 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
     if make_kdtree
         ytree = KDTree(y)
         _, D_xy = knn( ytree, x, kn, true )
+        data[:D_xy] = D_xy
     end
 
     # If ecdf's are used
@@ -22,7 +24,6 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
             push!( cdf_ii, cdf_ii_temp... )
         end
         if any( data[:LL] .>= 0 )   # Distance (CIL/ID) features
-            data[:D_xy] = D_xy
             if 0 in data[:LL]
                 if same
                     D = hcat( x, y )

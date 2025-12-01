@@ -67,7 +67,7 @@ function run_blowfly()
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    resample = 1    # 0 for no resampling, 1 for resampling only for bins, 2 for resampling for bins and data cov/mean
+    resample = 1    # 0 for no resampling, 1 for resampling for bins,
     res_nrep = 1   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 

@@ -21,7 +21,7 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
     # Initialize data structures
     chamfer_dists = Array{Float64}(undef, nrep*nsamp, 0)
     cdfs = Array{Float64}(undef, nrep*nsamp, 0)
-    bins = Matrix{ Float64 }( undef, 0, 0 )
+    bins = nothing
     if chamfer == 1
         chamfer_k = data[:chamfer_k]
         chamfer_dists = zeros( nrep*nsamp, length( chamfer_k ) )

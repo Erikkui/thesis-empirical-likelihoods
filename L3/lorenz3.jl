@@ -13,7 +13,7 @@ function lorenz_solve( init::Vector{Float64}, theta::Vector{Float64}, N_end; dt 
     prob = ODEProblem( lorenz3!, s0, (t[1], t[end]), theta)
     sol = solve(prob, Tsit5(), saveat=t)
 
-    # Drop first 10 pointsresample
+    # Drop first 10 points
     R0 = Array( sol )[ :, 11:end ]
 
     return R0

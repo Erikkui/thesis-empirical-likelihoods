@@ -73,7 +73,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
                     cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
 
                 else
-                    cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+                    cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
                 end
 
                 append!( ecdfs, cdfs_ii )
