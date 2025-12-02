@@ -36,8 +36,8 @@ function run_OU()
     # datafile = "blowflies.csv"  # Data file name, used only if synthetic_data = false
 
     # Initial parameters for OU model, also used to generate synthetic data
-    thetaa = 1.2
-    sigma = 0.75
+    thetaa = 3.0
+    sigma = 2.0
 
     theta = [ thetaa, sigma ]
 
@@ -47,8 +47,7 @@ function run_OU()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
-    use_2D = false  # Use 2D array  [R0; R0_diff] instead of 1D array [R0, R0_diff] for R0 and R0_diff
+    diff_order = [1, 2]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "xax"  # "xax", "yax", or "log"
@@ -56,20 +55,21 @@ function run_OU()
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [-2, 0]  # 0 for CIL, 1, 2... for ID; -1 to compute ecdf from signal too in addition to distances; -2 to not use distances
+    LL = [-1]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2, 3] # Neighbors to consider for chamfer distance
     resample = 1 # 0 for no resampling, 1 for resampling (possibly to be deprecated)
-    nsim = 30   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 10  # Number of resamplings from simulations (always > 1)
+    nsim = 100   # Number of model simulations per proposal theta (GSL: nsim = 1)
+    nrep = 5  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    res_nrep = 25   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    resample = 1    # 0 for no resampling, 1 for resampling
+    res_nrep = 50   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 10000   # MCMC chain length
+    nsimu = 30000   # MCMC chain length
     update_int = 30
     adapt_int = 20
     npar = length(theta)
@@ -80,10 +80,10 @@ function run_OU()
     ssfun = like_eval
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
-    N_init = 10
-    dt = 0.05
-    N_end = 10
+    init = 3.0
+    Ndata = 200
     nepo = 10
+    dt = 0.1
 
     # Save options in dictionaries
     data = Dict{Symbol, Any}(
@@ -107,13 +107,12 @@ function run_OU()
         :nbin => nbin,
         :res_dim => [res_nrep, res_nsamp],
         :params => theta,
-        :synth_init => N_init,
+        :synth_init => init,
         :synth_dt => dt,
         :nepo => nepo,
-        :N_end => N_end,
+        :Ndata => Ndata,
         :minmax => nothing,  # Is filled later
         :nL => sum( LL .>= -1 ),
-        :use_2D => use_2D,
     )
 
     mcmc_options = Dict{Symbol, Any}(

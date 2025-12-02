@@ -17,6 +17,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
     data[:create_kdtree] = create_kdtree
     data[:kn] = kn
 
+
     # Initialize bin storage
     data[:bins] = Dict{Symbol, Any}()
     if data[:eCDF] == 1

@@ -19,7 +19,7 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
     if 0 in data[:LL] || ( !make_kdtree && ( data[:chamfer] == 1 || any( data[:LL] .>= 0 ) ) )
         D = pairwise( Euclidean(), x, y, dims = 2 )
 
-        if data[:chamfer] == 1 || any( data[:LL] .>= 1 )
+        if ( data[:chamfer] == 1 || any( data[:LL] .>= 1 ) ) && !make_kdtree
             sort!( D; dims=2 )
         end
     end

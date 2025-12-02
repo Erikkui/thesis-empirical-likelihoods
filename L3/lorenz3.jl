@@ -5,10 +5,10 @@ function lorenz3!(du, u, params, t)
     nothing
 end
 
-function lorenz_solve( init::Vector{Float64}, theta::Vector{Float64}, N_end; dt = 1 )
-    t = 0:dt:N_end
-    s0 = init .* (1 .+ 0.01 .* randn(3))
-
+function lorenz_solve( init::Vector{Float64}, theta::Vector{Float64}, Ndata; dt = 1 )
+    t = (0:Ndata)*dt
+    # s0 = init .* (1 .+ 0.01 .* randn(3))
+    s0 = init
     # Define ODE problem and solve
     prob = ODEProblem( lorenz3!, s0, (t[1], t[end]), theta)
     sol = solve(prob, Tsit5(), saveat=t)

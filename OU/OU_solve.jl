@@ -1,17 +1,17 @@
-function OU_solve( theta, x0, N_end; dt = 0.1)
-    thetaa, sigma = theta
+function OU_solve( theta, x0, Ndata; dt = 0.1)
+    lambda, sigma = theta
     ndim = length(x0)
 
-    tt = 0:dt:N_end
-    noise = randn( ndim, tt.len )
+    tt = ( 0:Ndata ) .* dt
+    noise = randn( ndim, length(tt) )
 
-    x = zeros( ndim, tt.len )
+    x = zeros( ndim, length(tt) )
     x[:, 1] .= x0
 
-    for ii in 2:tt.len
+    for ii in 2:length(tt)
         eps_t = @view noise[:, ii]
         x_prev = @view x[:, ii-1]
-        x[:, ii] = x_prev .- thetaa*x_prev*dt .+ sigma*sqrt(dt)*eps_t
+        x[:, ii] = x_prev .- lambda*x_prev*dt .+ sigma*sqrt(dt)*eps_t
     end
 
     return x

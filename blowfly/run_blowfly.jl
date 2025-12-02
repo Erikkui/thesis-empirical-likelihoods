@@ -51,7 +51,7 @@ function run_blowfly()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1, 2, 3 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"

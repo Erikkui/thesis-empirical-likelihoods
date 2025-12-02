@@ -6,8 +6,6 @@ function cdf_do( D, data::Dict{Symbol, Any} )
     if haskey(data, :D_xy)
         D_xy = data[:D_xy]
         features = CIL_ID( D, D_xy, LL )
-        # println( "ADSASD")
-        # println("\n", -1 in LL, "\n", !data[:bins_done] )
         if -1 in data[:LL] && !data[:bins_done]
             push!( features, vec(D) )
         end

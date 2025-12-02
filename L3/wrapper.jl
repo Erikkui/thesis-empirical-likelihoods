@@ -10,8 +10,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     chamfer_k = data[:chamfer_k]
     eCDF = data[:eCDF]
     nL = data[:nL]
-    create_kdtree = data[:create_kdtree]
-    kn = data[:kn]
     diff_order = data[:diff_order]
     use_diff = data[:use_diff]
     bins = data[:bins]
@@ -64,7 +62,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
 
         for (ii, y) in enumerate( Rsim )
 
-            cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+            data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
 
             if eCDF == 1
                 cdfs_inds = (dd-1)*data[:nbin]*nL+1:dd*data[:nbin]*nL
@@ -80,12 +78,9 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
 
     summary_stats = [ cdfs chamfer_dists ]
 
-    println(summary_stats)
-
     if data[:log] == "log"
         summary_stats = log.(summary_stats)
     end
-    # sleep(1)
 
     # Compute muu and C based on simulated data
     if data[:case] == "bsl"

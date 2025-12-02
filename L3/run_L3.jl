@@ -32,7 +32,7 @@ function run_L3()
     #### DATA LOADING AND SAVING OPTIONS ####
     save_figures = false        # Save figures
     show_figures = true         # Show figures
-    save_netcdf_file = false     # Save NetCDF file
+    save_netcdf_file = true     # Save NetCDF file
 
     # Initial parameters for L3 model, also used to generate synthetic data
     theta = [10.0, 28.0, 8/3]
@@ -45,15 +45,15 @@ function run_L3()
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "xax"  # "xax", "yax", or "log"
-    use_log = "log"  # "log" or "nolog" for log transform for summary statistics
+    use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ 0, 1, 2]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
+    LL = [ 0, 1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
     nsim = 10   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 1  # Number of resamplings from simulations (always > 1)
+    nrep = 10  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
@@ -62,7 +62,7 @@ function run_L3()
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 1000   # MCMC chain length
+    nsimu = 30000   # MCMC chain length
     update_int = 30
     adapt_int = 50
     npar = length(theta)
@@ -75,7 +75,7 @@ function run_L3()
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
     init = [12.577, 19.471, 23.073]
     dt = 1
-    N_end = 300+10
+    N_end = 200+10
     nepo = 1
 
     # Save options in dictionaries
@@ -120,8 +120,8 @@ function run_L3()
         :ssfun => ssfun
     )
 
-    # chain, sschain, results, data = L3_main( data, mcmc_options, mcmc_models );
-    @profview L3_main( data, mcmc_options, mcmc_models )
+    chain, sschain, results, data = L3_main( data, mcmc_options, mcmc_models );
+    # @profview L3_main( data, mcmc_options, mcmc_models )
     println( "Run completed. Acceptance rate: ", results[:accept], "\n" )
 
     return chain, sschain, results, data
