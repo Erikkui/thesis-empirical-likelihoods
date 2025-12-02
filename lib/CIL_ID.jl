@@ -50,15 +50,17 @@ function CIL_ID( D, D_xy::Vector{Vector{Float64}}, LL::Vector{Int} )
     if 0 in LL  # CIL feature
         cil_dists = D[:]
         features[1] = cil_dists
-        filter!( >(0), LL )
         feature_ind = 2
     end
+    filter!( >(0), LL )
 
     # ID feature
     if ~isempty(LL)
         n_dist_rows = length( D_xy )
         n_ID_features = length(LL)
         ID_max = maximum(LL)
+
+        println( n_dist_rows, " ", n_ID_features, " ", ID_max )
         ID_ratios = zeros( Float64, n_dist_rows, ID_max )
 
         for ii in 1:n_dist_rows     # ID ratios

@@ -12,7 +12,8 @@ function create_likelihood( data::Dict{Symbol, Any} )
         kn_e = maximum( data[:LL] )
     end
     kn = max( kn_c, kn_e )+1  # Number of neighbors to find if needed
-    create_kdtree = kn_e > 0 || data[:chamfer] == 1 ? true : false
+    kdtree_condition = ( kn_e > 0 || data[:chamfer] == 1 ) && data[:data_dim] > 1
+    create_kdtree = kdtree_condition ? true : false
     data[:create_kdtree] = create_kdtree
     data[:kn] = kn
 
@@ -22,7 +23,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
         data[:bins] = Vector{ Vector{ Vector{Float64} } }(undef, 1 + length(data[:diff_order])*data[:use_diff] )
     end
 
-    if data[:resample] == 1     # Make bins and CDF/chamfer dist by resampling
+    if data[:resample] != 0     # Make bins and CDF/chamfer dist by resampling
         # If using resampling, store all R0 in one big matrix
 
         # Concatenate all nepo R0 matrices, R0 = Vector{ Matrix{Float64} }
@@ -39,8 +40,10 @@ function create_likelihood( data::Dict{Symbol, Any} )
         if data[:case] == "gsl"
             #TODO maybe to be deprecated
         else
+            # Create bins
             for ii in eachindex( data[:R0_all] )
-                data, _, bins = resample_data( data[:R0_all][ii], data )
+                R0_ii = data[:R0_all][ii]
+                data, bins = resample_bins( R0_ii, data )
                 data[:bins][ii] = bins
             end
             data[:bins_done] = true
@@ -51,29 +54,21 @@ function create_likelihood( data::Dict{Symbol, Any} )
             chamfer_dists = Vector{ Float64 }(undef, 0)
             for ii in eachindex( data[:R0_all] )
                 RR_ii = data[:R0_all][ii]
-                ndata_R_ii = size( RR_ii, 2 )
                 data[:bins] = bins[ii]
-
-                x_ind = rand( 1:ndata_R_ii, ndata_R_ii )
-                unique!( x_ind )
-                y_ind = setdiff( 1:ndata_R_ii, x_ind )
-                x = @view RR_ii[ :, x_ind ]
-                y = @view RR_ii[ :, y_ind ]
 
                 if -1 in data[:LL]          # Signal feature
                     cdfs_ii, _ = empcdf( vec(RR_ii), nx=data[:nbin], x=data[:bins][1] )
                     data[:LL] = data[:LL][2:end]
                     data[:bins] = data[:bins][2:end]
                     if ~isempty(LL)
-                        cdfs_ii_2, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
+                        data, cdfs_ii_2, chamfer_ii = resample_data( RR_ii, data )
                     end
                     data[:LL] = LL
                     data[:bins] = bins[ii]
 
-                    cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
-
+                    cdfs_ii = vcat( vec(cdfs_ii), vec(cdfs_ii_2) )
                 else
-                    cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
+                    data, cdfs_ii, chamfer_ii = resample_data( RR_ii, data )
                 end
 
                 append!( ecdfs, cdfs_ii )
@@ -81,6 +76,7 @@ function create_likelihood( data::Dict{Symbol, Any} )
             end
             data[:muu_data] = vcat( ecdfs, chamfer_dists )
             data[:bins] = bins  # Reset bins in data dict
+            data[:res_dim][1] = data[:case_dim][2]  # Set resampling dimension correctly
 
             return data, nothing
         end

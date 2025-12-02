@@ -1,52 +1,18 @@
-function resample_data( R_all, data::Dict{Symbol, Any} )
-    # Create likelihood by resampling data in R0. Create bins if using ecdfs.
-    # R0: nepo sets of nobs vectors each, pooled here together for resampling
-    # Either eCDF, Chamfer distance, or both returned in 'cdf'
-    # For eCDF the bin values are returned in 'data', computed by the
-    # 'nsamp' values of the first inner loop.
-    #
-    # data.res_dim =[method,nrepo,nsamp]:
-    # nrep      size of outer loop
-    # nsamp     size of inner loop
-
-    nrep, nsamp = data[:res_dim]
-    eCDF = data[:eCDF]
-    chamfer = data[:chamfer]
-
+function resample_bins( R_all, data::Dict{Symbol, Any} )
+    # Resample data to create bins for eCDF calculation
+    nsamp = data[:res_dim][2]
     create_kdtree = data[:create_kdtree]
     kn = data[:kn]
+    nL = data[:nL]
+
+    # For bin limits and calculation
+    minmax = [ fill(-Inf, (1, nL) ); fill(Inf, (1, nL)) ]
+    mins = copy( minmax[1, :] )
+    maxs = copy( minmax[2, :] )
 
     ntot = size( R_all, 2 )  # Total number of observations
-
-    # Initialize data structures
-    chamfer_dists = Array{Float64}(undef, nrep*nsamp, 0)
-    cdfs = Array{Float64}(undef, nrep*nsamp, 0)
-    bins = nothing
-    if chamfer == 1
-        chamfer_k = data[:chamfer_k]
-        chamfer_dists = zeros( nrep*nsamp, length( chamfer_k ) )
-    end
-    if eCDF == 1
-        nL = data[:nL]
-        LL = data[:LL]
-        nbin = data[:nbin]
-
-        cdfs = zeros( nrep*nsamp, nL*nbin )
-
-        # For bin limits and calculation
-        minmax = [ fill(-Inf, (1, nL) ); fill(Inf, (1, nL)) ]
-        mins = copy( minmax[1, :] )
-        maxs = copy( minmax[2, :] )
-    end
-
-    # Setting iterator. Use progress bar if calculating summaries in addition to bins
-    if nrep > 1
-        iter = ProgressBar( 1:nrep*nsamp )
-    else
-        iter = 1:nrep*nsamp
-    end
-
-    for ii in iter
+    bins = Vector{ Vector{Float64} }( undef, 0 )
+    for ii in 1:nsamp
         # OOB sampling
         in_bag = rand( 1:ntot, ntot)
         unique!( in_bag )
@@ -54,57 +20,128 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
         x = @view R_all[ :, in_bag ]
         y = @view R_all[ :, out_of_bag ]
 
-        # Find bin limits and calculate bins OR only calculate summaries for this sample
-        bins = Vector{ Vector{Float64} }( undef, 0 )
-        if ii <= nsamp && eCDF == 1
+        cdf_ii, _ = create_summaries( x, y, data, create_kdtree, kn; same = true )
 
-            cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn; same = true )
-
-            # Min and max values for bin creation
-            for jj in 1:nL
-                m1 = minimum( cdf_ii[jj] )
-                mins[jj] = max( mins[jj], m1 )
-                M1 = maximum( cdf_ii[jj] )
-                maxs[jj] = min( maxs[jj], M1 )
-            end
-
-            if ii == nsamp  # Only at the nsamp'th sample, compute bins
-
-                minmax[1, :] = mins
-                minmax[2, :] = maxs
-                # data[:minmax] = minmax
-
-                for jj in 1:nL
-                    data[:minmax] = minmax[:, jj]
-                    if data[:uni] == "yax"
-                        data[:r] = cdf_ii[jj]    # data[:r][LL] = signal/CIL/ID feature vector
-                    end
-                    bins_nL = bin_select( data )
-                    push!( bins, bins_nL )
-                end
-            end
-
-        else    # Only calculate summaries for this sample
-            cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
-            cdfs[ ii, : ] = cdf_ii
-            chamfer_dists[ ii, : ] = c_ii
+        # Min and max values for bin creation
+        for jj in 1:nL
+            m1 = minimum( cdf_ii[jj] )
+            mins[jj] = max( mins[jj], m1 )
+            M1 = maximum( cdf_ii[jj] )
+            maxs[jj] = min( maxs[jj], M1 )
         end
 
-        # For progress bar description
-        if nrep > 1
-            set_description(iter, "Resampling data:")
+        if ii == nsamp  # Only at the nsamp'th sample, compute bins
+
+            minmax[1, :] = mins
+            minmax[2, :] = maxs
+            # data[:minmax] = minmax
+
+            for jj in 1:nL
+                data[:minmax] = minmax[:, jj]
+                if data[:uni] == "yax"
+                    data[:r] = cdf_ii[jj]    # data[:r][LL] = signal/CIL/ID feature vector
+                end
+                bins_nL = bin_select( data )
+                push!( bins, bins_nL )
+            end
         end
     end
+    return data, bins
+end
 
-    summary_stats = [ cdfs chamfer_dists ]
 
-    # Remove rows of all zeros
-    mask = any( abs.( summary_stats ) .> 10e-16, dims=2 )
-    summary_stats = summary_stats[ vec(mask), : ]
+function resample_data( R_all, data::Dict{Symbol, Any} )
+    ntot = size( R_all, 2 )  # Total number of observations
+    nrep = data[:res_dim][1]
+    chamfer = data[:chamfer]
+    eCDF = data[:eCDF]
+    create_kdtree = data[:create_kdtree]
+    kn = data[:kn]
+
+    # Resample data to create data covariance/mean
+    chamfer_dists = Array{Float64}(undef, nrep, 0)
+    cdfs = Array{Float64}(undef, nrep, 0)
+
+    if chamfer == 1
+        chamfer_k = data[:chamfer_k]
+        chamfer_dists = zeros( nrep, length( chamfer_k ) )
+    end
+    if eCDF == 1
+        nL = length( data[:LL] )
+        nbin = data[:nbin]
+        cdfs = zeros( nrep, nL*nbin )
+    end
+
+    for ii in 1:nrep
+        # OOB sampling
+        in_bag = rand( 1:ntot, ntot)
+        unique!( in_bag )
+        out_of_bag = setdiff( 1:ntot, in_bag )
+        x = @view R_all[ :, in_bag ]
+        y = @view R_all[ :, out_of_bag ]
+
+        cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
+        cdfs[ ii, : ] = cdf_ii
+        chamfer_dists[ ii, : ] = c_ii
+    end
 
     if data[:log] == "log"
-        summary_stats = log.(summary_stats)
+        cdfs = log.( cdfs )
+        chamfer_dists = log.( chamfer_dists )
     end
 
-    return data, summary_stats, bins
+    if size( cdfs, 1 ) > 1
+        cdfs = mean( cdfs, dims=1 )
+        chamfer_dists = mean( chamfer_dists, dims=1 )
+    end
+
+    return data, cdfs, chamfer_dists
+end
+
+
+function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
+    nrep = data[:res_dim][1]
+    chamfer = data[:chamfer]
+    eCDF = data[:eCDF]
+    create_kdtree = data[:create_kdtree]
+    kn = data[:kn]
+    ntot = size( R_obs, 2 )  # Total number of observations
+
+    # Resample data to create data covariance/mean
+    chamfer_dists = Array{Float64}(undef, nrep, 0)
+    ecdfs = Array{Float64}(undef, nrep, 0)
+
+    if chamfer == 1
+        chamfer_k = data[:chamfer_k]
+        chamfer_dists = zeros( nrep, length( chamfer_k ) )
+    end
+    if eCDF == 1
+        nL = length( data[:LL] )
+        nbin = data[:nbin]
+        ecdfs = zeros( nrep, nL*nbin )
+    end
+
+    for ii in 1:nrep
+        # OOB sampling
+        in_bag = rand( 1:ntot, ntot)
+        unique!( in_bag )
+        x = @view R_obs[ :, in_bag ]
+        y = R_sim
+
+        cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
+        ecdfs[ ii, : ] = cdf_ii
+        chamfer_dists[ ii, : ] = c_ii
+    end
+
+    if data[:log] == "log"
+        ecdfs = log.( ecdfs )  # Avoid log(0)
+        chamfer_dists = log.( chamfer_dists )
+    end
+
+    if size( ecdfs, 1 ) > 1
+        ecdfs = mean( ecdfs, dims=1 )
+        chamfer_dists = mean( chamfer_dists, dims=1 )
+    end
+
+    return data, vec( ecdfs ), chamfer_dists
 end

@@ -5,7 +5,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     burn_in = data[:synth_burn_in]
     init = data[:synth_init]
     R0_all = data[:R0_all]
-    nepo = data[:nepo]
     nobs = data[:nobs]
     case_nsim, case_nrep = data[:case_dim]
     chamfer = data[:chamfer]
@@ -14,10 +13,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     bins = data[:bins]
     LL = data[:LL]
     nL = data[:nL]
-    create_kdtree = data[:create_kdtree]
-    kn = data[:kn]
-    case = data[:case]
-    data_dim = data[:data_dim]
     diff_order = data[:diff_order]
     use_diff = data[:use_diff]
 
@@ -60,28 +55,33 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         R_sim_all = [ R_sim_all ]
     end
 
+    cdfs_ii_2 = Vector{Float64}(undef, 0)
+    chamfer_ii = Vector{Float64}(undef, 0)
     # Create eCDFs and chamfer distances for each simulations
     for dd in eachindex(R0_all) # Loop over data types: original and differences
         x = R0_all[dd]
         R_sim_dd = R_sim_all[dd]
         data[:bins] = bins[dd]
 
-
         for (ii, y) in enumerate( eachrow( R_sim_dd ) )
             if -1 in data[:LL]          # Signal feature
                 cdfs_ii, _ = empcdf( y, nx=data[:nbin], x=data[:bins][1] )
                 data[:LL] = data[:LL][2:end]
                 data[:bins] = data[:bins][2:end]
-                if ~isempty(LL)
-                    cdfs_ii_2, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+                if ~isempty( data[:LL] ) || chamfer == 1
+                    if data[:resample] != 0
+                        data, cdfs_ii_2, chamfer_ii = resample_data( x, y, data )
+                    end
+
                 end
                 data[:LL] = LL
                 data[:bins] = bins[dd]
 
                 cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
-
             else
-                cdfs_ii, chamfer_ii = create_summaries( x, y, data, create_kdtree, kn )
+                if data[:resample] != 0
+                    cdfs_ii, chamfer_ii = resample_data( y, data )
+                end
             end
 
             if eCDF == 1
@@ -92,7 +92,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
                 chamf_inds = (dd-1)*length( chamfer_k )+1:dd*length( chamfer_k )
                 chamfer_dists[ ii, chamf_inds ] = chamfer_ii
             end
-
         end
     end
     data[:bins] = bins  # Reset bins in data dict

@@ -5,7 +5,7 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
     x = reshape( x, data_dim, : )
     y = reshape( y, data_dim, : )
 
-    # Whether to build KDTree: always if chamfer used, or if ID features are used
+    # Whether to build KDTree
     D_xy =  Vector{Vector{Float64}}(undef, 0)
     cdf_ii = Vector{Vector{Float64}}(undef, 0)
     c_ii = Vector{Float64}(undef, 0)
@@ -15,24 +15,28 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
         data[:D_xy] = D_xy
     end
 
+    D = Matrix{Float64}(undef, 0, 0)
+    if 0 in data[:LL] || ( !make_kdtree && ( data[:chamfer] == 1 || any( data[:LL] .>= 0 ) ) )
+        D = pairwise( Euclidean(), x, y, dims = 2 )
+
+        if data[:chamfer] == 1 || any( data[:LL] .>= 1 )
+            sort!( D; dims=2 )
+        end
+    end
+
+
     # If ecdf's are used
     if data[:eCDF] == 1
-        D = Matrix{Float64}(undef, 0, 0)
         if -1 in data[:LL]          # Signal feature
-            D = hcat( x, y )
-            cdf_ii_temp = cdf_do( D, data )
+            if same
+                cdf_ii_temp = cdf_do( x, data )
+            else
+                XY = hcat( x, y )
+                cdf_ii_temp = cdf_do( XY, data )
+            end
             push!( cdf_ii, cdf_ii_temp... )
         end
         if any( data[:LL] .>= 0 )   # Distance (CIL/ID) features
-            if 0 in data[:LL]
-                if same
-                    D = hcat( x, y )
-                    D = pairwise( Euclidean(), D, dims = 2 )
-                    D = filter( !iszero, triu!(D) )
-                else
-                    D = pairwise( Euclidean(), x, y, dims = 2 )
-                end
-            end
             cdf_ii_temp = cdf_do( D, data )
             push!( cdf_ii, cdf_ii_temp... )
         end
@@ -41,7 +45,11 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
 
     # If chamfer distances are used
     if data[:chamfer] == 1
-        c_ii = chamfer_dist( x, y, D_xy, data[:chamfer_k] )
+        if make_kdtree
+            c_ii = chamfer_dist( x, y, D_xy, data[:chamfer_k] )
+        else
+            c_ii = chamfer_dist( D, data[:chamfer_k] )
+        end
     end
 
     # If bins have been calculated, return cdfs as one long vector; otherwise return them

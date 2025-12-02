@@ -5,7 +5,7 @@ using Random: randperm
 using Distances: pairwise, Euclidean
 using StatsBase
 using LoopVectorization
-using NearestNeighbors
+# using NearestNeighbors
 using CairoMakie
 using NCDatasets
 using ProgressBars
@@ -51,7 +51,7 @@ function run_blowfly()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [1, 2, 3 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -59,20 +59,20 @@ function run_blowfly()
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ -1, 0, 1, 2 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
-    chamfer_k = [1, 2, 3] # Neighbors to consider for chamfer distance
-    nsim = 20   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
-    nrep = 1  # Number of resamplings from simulations (always > 1)
+    chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
+    nsim = 100   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nrep = 5  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    resample = 1    # 0 for no resampling, 1 for resampling for bins,
-    res_nrep = 1   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    resample = 1    # 0 for no resampling, 1 for resampling
+    res_nrep = 50   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 5000   # MCMC chain length
+    nsimu = 30000   # MCMC chain length
     update_int = 30
     adapt_int = 50
     npar = length(theta)
@@ -134,7 +134,8 @@ function run_blowfly()
         :ssfun => ssfun
     )
 
-    chain, sschain, results, data = blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
+    # chain, sschain, results, data = blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
+    @profview blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
     println( "Run completed. Acceptance rate: ", results[:accept] )
 
     return chain, sschain, results, data

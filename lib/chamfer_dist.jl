@@ -1,25 +1,16 @@
-# Non-kdtree version
-function chamfer_dist( D, chamfer_dims::Vector{Int} )
+function chamfer_dist(D, neighbors)
+    kmax = maximum( neighbors )
+    N_xy, N_yx = size(D)
 
-    n, m = size(D)
+    # Nearest neighbors for each x
+    dists_x_to_y = sum( @views( D[:, 1:kmax] ) , dims=1 )
 
-    if length( chamfer_dims ) == 1 && chamfer_dims[1] == 1  # Standard chamfer distance
-        x_to_y = minimum( D, dims=2 )
-        y_to_x = minimum( D, dims=1 )
-        chamfer_dist = sum( x_to_y )/n + sum( y_to_x )/m
-    else
-        # Sort the distance matrix
-        Dsorted_xy = sort( D, dims=2 )
-        Dsorted_yx = sort( D, dims=1 )
+    # Nearest neighbors for each y
+    sort!( D; dims=1 )
+    dists_y_to_x = sum( @views( D[1:kmax, :] ) , dims=2 )'
 
-        # Extract the chamfer dimensions
-        x_to_y = @view( Dsorted_xy[ :, chamfer_dims ] )
-        y_to_x = @view( Dsorted_yx[ chamfer_dims, : ] )
-
-        # Compute the chamfer distance
-        chamfer_dist = sum( x_to_y, dims = 1 )./n + sum( y_to_x, dims = 2 )'./m
-
-    end
+    # Compute chamfer distance
+    chamfer_dist = dists_x_to_y./N_xy + dists_y_to_x./N_yx
 
     return chamfer_dist
 end
@@ -33,7 +24,9 @@ function chamfer_dist( x, y, D_xy::Vector{Vector{Float64}}, chamfer_dims::Vector
     k = maximum( chamfer_dims )
 
     tree_x = KDTree( x )
-    _, D_yx = knn( tree_x, y, k, true )
+
+    # println( size(x), "  ", size(y), "\n\n", k )
+    _, D_yx = knn( tree_x, y, k, false )
 
     # Extract the chamfer dimensions
     x_to_y = @view sum( D_xy )[ chamfer_dims ]
