@@ -36,7 +36,7 @@ function mcmcrun2(model::Dict{Symbol, Any},
 
     iter = ProgressBar( 2:chain_length )
     ii = 1
-    try
+    # try
         for ii in iter  # Simulation loop
 
             rr = randn( Float64, n_params )
@@ -89,23 +89,23 @@ function mcmcrun2(model::Dict{Symbol, Any},
 
             set_description( iter, "Running MCMC:" )
         end
-    catch e
-        println( "Error occurred during MCMC:: ", e, "\nReturning results up to the last successful iteration." )
-        accept = 1 - n_rejected / chain_length  # acceptance rate
-        results_new = Dict(
-        :accept => accept,
-        :last => vec( chain[end, :] ),
-        :qcov => qcov
-        )
+    # catch e
+    #     println( "Error occurred during MCMC:: ", e, "\nReturning results up to the last successful iteration." )
+    #     accept = 1 - n_rejected / chain_length  # acceptance rate
+    #     results_new = Dict(
+    #     :accept => accept,
+    #     :last => vec( chain[end, :] ),
+    #     :qcov => qcov
+    #     )
 
-        if !isnothing( results_prev )
-            results_new[:Chain] = vcat( Chain, chain )
-        else
-            results_new[:Chain] = chain
-        end
+    #     if !isnothing( results_prev )
+    #         results_new[:Chain] = vcat( Chain, chain )
+    #     else
+    #         results_new[:Chain] = chain
+    #     end
 
-        return chain, sschain, results_new
-    end
+    #     return chain, sschain, results_new
+    # end
 
     accept = 1 - n_rejected / chain_length  # acceptance rate
     results_new = Dict(

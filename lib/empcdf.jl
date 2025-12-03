@@ -1,4 +1,4 @@
-function empcdf( data::AbstractVector{Float64}; nx=10, x=nothing)
+function empcdf( data::AbstractArray{Float64}; nx=10, x=nothing)
 
     if isnothing(x)
         m = minimum( data )

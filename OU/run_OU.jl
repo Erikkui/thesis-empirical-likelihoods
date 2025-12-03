@@ -112,7 +112,7 @@ function run_OU()
         :nepo => nepo,
         :Ndata => Ndata,
         :minmax => nothing,  # Is filled later
-        :nL => sum( LL .>= -1 ),
+        :nL => length(LL),
     )
 
     mcmc_options = Dict{Symbol, Any}(

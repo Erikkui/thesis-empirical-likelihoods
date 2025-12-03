@@ -2,13 +2,10 @@ function create_synth_data( data::Dict{Symbol, Any} )
     # Create synthetic data for the N01 case
 
     params = copy(data[:params])
-    init = data[:synth_init]
-    dt = data[:synth_dt]
-    N_end = data[:synth_N]
+    Ndata = data[:Ndata]
     nepo = data[:nepo]
     use_diff = data[:use_diff]
     diff_order = data[:diff_order]
-    use_2D = data[:use_2D]
 
     R0 = Vector{ Matrix{Float64} }(undef, nepo)
 
@@ -20,22 +17,18 @@ function create_synth_data( data::Dict{Symbol, Any} )
     end
 
     for ii in 1:nepo
-        N = randn( 1, N_end ).*params[2] .+ params[1]
+        N = randn( 1, Ndata ).*params[2] .+ params[1]
         R0[ii] = N
         if use_diff == 1
             R0_diff_ii = calculate_diffs( N, diff_order, dt )
-            if use_2D
-                R0[ii] = vcat( N, R0_diff_ii... )  # Store the population size with differences
-            else
-                push!.( R0_diff, R0_diff_ii )
-            end
+            push!.( R0_diff, R0_diff_ii )
         end
     end
 
     data[:nobs] = size( R0[1], 2 )
     data[:R0] = R0
 
-    if use_diff == 1 && use_2D != 1
+    if use_diff == 1
         data[:R0_diff] = R0_diff
     end
 

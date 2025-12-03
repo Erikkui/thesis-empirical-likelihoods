@@ -33,38 +33,36 @@ function run_N01()
     save_figures = false        # Save figures
     show_figures = true         # Show figures
     save_netcdf_file = false     # Save NetCDF file
-    # datafile = "blowflies.csv"  # Data file name, used only if synthetic_data = false
 
     # Initial parameters for N01 model, also used to generate synthetic data
-    theta = [3, 1]      # mu, sigma
+    theta = [0, 1]      # mu, sigma
 
     #### OPTIONS FOR RUN ####
 
     ## Methods options
     use_diff = 0
     diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
-    use_2D = false  # Use 2D array  [R0; R0_diff] instead of 1D array [R0, R0_diff] for R0 and R0_diff
-    case = "gsl"  # "bsl" or "gsl"
+    case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "xax"  # "xax", "yax", or "log"
     use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [0]  # 0 for CIL, 1, 2... for ID; -1 to compute ecdf from signal too in addition to distances; -2 to not use distances
+    LL = [1]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1] # Neighbors to consider for chamfer distance
-    resample = 1 # 0 for no resampling, 1 for resampling (possibly to be deprecated)
-    nsim = 1   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 20  # Number of resamplings from simulations (always > 1)
+    nsim = 100   # Number of model simulations per proposal theta (GSL: nsim = 1)
+    nrep = 5  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
+    resample = 1 # 0 for no resampling, 1 for resampling
     res_nrep = 50   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 10  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 10000   # MCMC chain length
+    nsimu = 1000   # MCMC chain length
     update_int = 30
     adapt_int = 20
     npar = length(theta)
@@ -75,9 +73,9 @@ function run_N01()
     ssfun = like_eval
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
-    N_end = 100
-    nepo = 10
-    dt = 1
+    Ndata = 100
+    nepo = 1
+    dt = nothing
 
     # Save options in dictionaries
     data = Dict{Symbol, Any}(
@@ -101,13 +99,11 @@ function run_N01()
         :res_dim => [res_nrep, res_nsamp],
         :params => theta,
         :synth_init => init,
-        :synth_dt => dt,
-        :synth_N => N_end,
+        :Ndata => Ndata,
         :nepo => nepo,
-        :N_end => N_end,
         :minmax => nothing,  # Is filled later
-        :nL => sum( LL .>= -1 ),
-        :use_2D => use_2D,
+        :nL => length(LL),
+        :dt => dt
     )
 
     mcmc_options = Dict{Symbol, Any}(

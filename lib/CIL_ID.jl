@@ -21,6 +21,7 @@ function CIL_ID( distances, LL::Vector{Int} )
 
         for ii in 1:n_dist_rows     # ID ratios
             dists_row = @view distances[ ii, : ]
+            println(dists_row)
             partialsort!( dists_row, 1:ID_max+1 )   # Sort the up to ID_max+1 elements
 
             ratios_ii = @views( dists_row[ 2:ID_max+1 ] ./ dists_row[ 1:ID_max ] )
