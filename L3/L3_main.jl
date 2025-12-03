@@ -5,8 +5,15 @@ function L3_main( data, options, model; datafile = nothing )
 
     data[:data_dim] = size( data[:R0][1], 1 )
 
+    # Generate run identifier
+    identifier = generate_identifier( CASE_NAME, data )
+    println( "Starting run ", identifier )
 
-    # # Test gaussianity by khi^2 test
+    # Create the likelihood
+    data, _ = create_likelihood( data )
+    data[:res_dim][1] = 1               # Resampling dimensions for the wrapper
+
+    # Test gaussianity by khi^2 test
     # data, summary_stats = create_likelihood( data )
     # fig = Figure();
     # ax = Axis(fig[1, 1], title="Khi2 test")
@@ -17,15 +24,6 @@ function L3_main( data, options, model; datafile = nothing )
     # axislegend(ax; position=:rt)
     # display( fig )
     # sleep(3)
-
-
-    # Generate run identifier
-    identifier = generate_identifier( CASE_NAME, data )
-    println( "Starting run ", identifier )
-
-    # Create the likelihood
-    data, _ = create_likelihood( data )
-    data[:res_dim][1] = 1               # Resampling dimensions for the wrapper
 
 
     # Evaluate likelihood before MCMC

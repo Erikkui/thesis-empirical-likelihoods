@@ -12,7 +12,7 @@ function bin_select( data )
         nd = length(r)
     end
 
-    delta = (b - a) / 500
+    delta = (b - a) / 200
     a += delta
     b -= delta
 

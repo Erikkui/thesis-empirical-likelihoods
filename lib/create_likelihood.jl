@@ -75,11 +75,17 @@ function create_likelihood( data::Dict{Symbol, Any} )
                 append!( ecdfs, cdfs_ii )
                 append!( chamfer_dists, chamfer_ii )
             end
-            data[:muu_data] = vcat( ecdfs, chamfer_dists )
+            summary_stats = vcat( ecdfs, chamfer_dists )
+
+            if data[:log] == "log"
+                summary_stats = log.( summary_stats )
+            end
+
+            data[:muu_data] = summary_stats
             data[:bins] = bins  # Reset bins in data dict
             data[:res_dim][1] = data[:case_dim][2]  # Set resampling dimension correctly
 
-            return data, nothing
+            return data, summary_stats
         end
 
     else

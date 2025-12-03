@@ -41,16 +41,16 @@ function run_L3()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [1, 2]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "xax"  # "xax", "yax", or "log"
-    use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
+    use_log = "log"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ 0, 1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
+    LL = [ 0, 1, 2 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
     nsim = 10   # Number of model simulations per proposal theta (GSL: nsim = 1)
     nrep = 10  # Number of resamplings from simulations (always > 1)
@@ -62,7 +62,7 @@ function run_L3()
     res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 30000   # MCMC chain length
+    nsimu = 20000   # MCMC chain length
     update_int = 30
     adapt_int = 50
     npar = length(theta)

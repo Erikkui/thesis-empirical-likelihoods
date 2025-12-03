@@ -77,7 +77,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     data[:bins] = bins  # Reset bins in data dict
 
     summary_stats = [ cdfs chamfer_dists ]
-
+    println(summary_stats)
     if data[:log] == "log"
         summary_stats = log.(summary_stats)
     end

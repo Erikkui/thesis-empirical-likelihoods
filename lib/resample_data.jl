@@ -85,11 +85,6 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
         chamfer_dists[ ii, : ] = c_ii
     end
 
-    if data[:log] == "log"
-        cdfs = log.( cdfs )
-        chamfer_dists = log.( chamfer_dists )
-    end
-
     if size( cdfs, 1 ) > 1
         cdfs = mean( cdfs, dims=1 )
         chamfer_dists = mean( chamfer_dists, dims=1 )
@@ -131,11 +126,8 @@ function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
         cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
         ecdfs[ ii, : ] = cdf_ii
         chamfer_dists[ ii, : ] = c_ii
-    end
-
-    if data[:log] == "log"
-        ecdfs = log.( ecdfs )  # Avoid log(0)
-        chamfer_dists = log.( chamfer_dists )
+        println(cdf_ii)
+        sleep(0.1)
     end
 
     if size( ecdfs, 1 ) > 1
