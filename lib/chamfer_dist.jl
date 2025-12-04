@@ -25,8 +25,7 @@ function chamfer_dist( x, y, D_xy::Vector{Vector{Float64}}, chamfer_dims::Vector
 
     tree_x = KDTree( x )
 
-    # println( size(x), "  ", size(y), "\n\n", k )
-    _, D_yx = knn( tree_x, y, k, false )
+    _, D_yx = knn( tree_x, y, k, true )
 
     # Extract the chamfer dimensions
     x_to_y = @view sum( D_xy )[ chamfer_dims ]

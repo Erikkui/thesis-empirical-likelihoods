@@ -62,6 +62,8 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
 
         for (ii, y) in enumerate( Rsim )
 
+            # println( x, "\n", y)
+
             data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
 
             if eCDF == 1
@@ -77,7 +79,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     data[:bins] = bins  # Reset bins in data dict
 
     summary_stats = [ cdfs chamfer_dists ]
-    println(summary_stats)
+
     if data[:log] == "log"
         summary_stats = log.(summary_stats)
     end
@@ -93,6 +95,11 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         end
 
         data[:C] = C
+    end
+
+    if any(isnan, C)
+        println( summary_stats )
+        sleep(2)
     end
 
     if size( summary_stats, 1 ) > 1

@@ -45,7 +45,7 @@ function run_L3()
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "xax"  # "xax", "yax", or "log"
-    use_log = "log"  # "log" or "nolog" for log transform for summary statistics
+    use_log = "nlog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF

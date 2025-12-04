@@ -39,8 +39,6 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
         if any( data[:LL] .>= 0 )   # Distance (CIL/ID) features
             cdf_ii_temp = cdf_do( D, data )
             push!( cdf_ii, cdf_ii_temp... )
-            println(cdf_ii)
-            sleep(0.1)
         end
 
     end
@@ -57,8 +55,6 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
     # If bins have been calculated, return cdfs as one long vector; otherwise return them
     # as vector of vectors from which bins can be calculated for each feature.
     if data[:bins_done]
-        println(cdf_ii)
-        sleep(0.1)
         return vcat( cdf_ii... ), c_ii
     else
         return cdf_ii, c_ii

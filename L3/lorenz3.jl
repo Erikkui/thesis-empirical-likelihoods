@@ -7,8 +7,7 @@ end
 
 function lorenz_solve( init::Vector{Float64}, theta::Vector{Float64}, Ndata; dt = 1 )
     t = (0:Ndata)*dt
-    # s0 = init .* (1 .+ 0.01 .* randn(3))
-    s0 = init
+    s0 = init .* (1 .+ 0.01 .* randn(3))
     # Define ODE problem and solve
     prob = ODEProblem( lorenz3!, s0, (t[1], t[end]), theta)
     sol = solve(prob, Tsit5(), saveat=t)

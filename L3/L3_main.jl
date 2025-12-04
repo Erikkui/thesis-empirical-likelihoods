@@ -10,22 +10,20 @@ function L3_main( data, options, model; datafile = nothing )
     println( "Starting run ", identifier )
 
     # Create the likelihood
-    data, _ = create_likelihood( data )
-    data[:res_dim][1] = 1               # Resampling dimensions for the wrapper
+    data, summary_stats = create_likelihood( data )
 
     # Test gaussianity by khi^2 test
-    # data, summary_stats = create_likelihood( data )
-    # fig = Figure();
-    # ax = Axis(fig[1, 1], title="Khi2 test")
-    # # the cdf vectors by the khi2 test:
-    # nlogl,iC,x,chi_pf,Yave,Ystd,khi_n = chi2_test( summary_stats )
-    # lines!( ax, x, chi_pf, color=:red, label="Chi-square PDF" )
-    # lines!( ax, x, khi_n, color=:green, label="Chi-square histogram" )
-    # axislegend(ax; position=:rt)
-    # display( fig )
-    # sleep(3)
+    fig = Figure();
+    ax = Axis(fig[1, 1], title="Khi2 test")
+    # the cdf vectors by the khi2 test:
+    nlogl,iC,x,chi_pf,Yave,Ystd,khi_n = chi2_test( summary_stats )
+    lines!( ax, x, chi_pf, color=:red, label="Chi-square PDF" )
+    lines!( ax, x, khi_n, color=:green, label="Chi-square histogram" )
+    axislegend(ax; position=:rt)
+    display( fig )
+    sleep(1)
 
-
+    data[:res_dim][1] = 1               # Resampling dimensions for the wrapper
     # Evaluate likelihood before MCMC
     theta = data[:params]
     ss = like_eval(theta, data)

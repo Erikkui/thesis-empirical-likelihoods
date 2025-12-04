@@ -65,7 +65,6 @@ function CIL_ID( D, D_xy::Vector{Vector{Float64}}, LL::Vector{Int} )
         for ii in 1:n_dist_rows     # ID ratios
             dists_row = D_xy[ii]
             ratios_ii = dists_row[ 2:ID_max+1 ] ./ dists_row[ 1:ID_max ]
-
             ID_ratios[ ii, : ] = ratios_ii
         end
 

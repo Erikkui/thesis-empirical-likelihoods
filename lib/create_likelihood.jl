@@ -51,8 +51,8 @@ function create_likelihood( data::Dict{Symbol, Any} )
 
             LL = data[:LL]  # Store original LL
             bins = data[:bins]  # Store bins for later use
-            ecdfs = Vector{ Float64 }(undef, 0)
-            chamfer_dists = Vector{ Float64 }(undef, 0)
+            ecdfs = Vector{Matrix{Float64}}(undef, 0)
+            chamfer_dists = Vector{Matrix{Float64}}(undef, 0)
             for ii in eachindex( data[:R0_all] )
                 RR_ii = data[:R0_all][ii]
                 data[:bins] = bins[ii]
@@ -67,31 +67,29 @@ function create_likelihood( data::Dict{Symbol, Any} )
                     data[:LL] = LL
                     data[:bins] = bins[ii]
 
-                    cdfs_ii = vcat( vec(cdfs_ii), vec(cdfs_ii_2) )
+                    cdfs_ii = hcat( cdfs_ii, cdfs_ii_2 )
                 else
                     data, cdfs_ii, chamfer_ii = resample_data( RR_ii, data )
                 end
 
-                append!( ecdfs, cdfs_ii )
-                append!( chamfer_dists, chamfer_ii )
+                push!( ecdfs, cdfs_ii )
+                push!( chamfer_dists, chamfer_ii )
             end
-            summary_stats = vcat( ecdfs, chamfer_dists )
+            ecdfs = vcat( ecdfs... )
+            chamfer_dists = vcat( chamfer_dists... )
+            summary_stats = hcat( ecdfs, chamfer_dists )
 
-            if data[:log] == "log"
-                summary_stats = log.( summary_stats )
-            end
-
-            data[:muu_data] = summary_stats
             data[:bins] = bins  # Reset bins in data dict
             data[:res_dim][1] = data[:case_dim][2]  # Set resampling dimension correctly
-
-            return data, summary_stats
         end
-
     else
         # TODO
         # Make bins by epochs
         # data, cdf = pairwise_distL(data[:R0], data)
+    end
+
+    if data[:log] == "log"
+        summary_stats = log.( summary_stats )
     end
 
     # Compute mean
@@ -108,8 +106,8 @@ function create_likelihood( data::Dict{Symbol, Any} )
         C = cov( summary_stats )
     end
 
-    data[:muu] = muu
+    data[:muu_data] = muu
     data[:C] = C
-
+    println(size(summary_stats))
     return data, summary_stats
 end

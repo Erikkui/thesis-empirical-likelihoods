@@ -6,9 +6,9 @@ function resample_bins( R_all, data::Dict{Symbol, Any} )
     nL = data[:nL]
 
     # For bin limits and calculation
-    minmax = [ fill(-Inf, (1, nL) ); fill(Inf, (1, nL)) ]
-    mins = copy( minmax[1, :] )
-    maxs = copy( minmax[2, :] )
+    minmax = zeros( 2, nL )
+    mins = zeros( nsamp, nL)
+    maxs = zeros( nsamp, nL)
 
     ntot = size( R_all, 2 )  # Total number of observations
     bins = Vector{ Vector{Float64} }( undef, 0 )
@@ -23,17 +23,15 @@ function resample_bins( R_all, data::Dict{Symbol, Any} )
         cdf_ii, _ = create_summaries( x, y, data, create_kdtree, kn; same = true )
 
         # Min and max values for bin creation
-        for jj in 1:nL
-            m1 = minimum( cdf_ii[jj] )
-            mins[jj] = max( mins[jj], m1 )
-            M1 = maximum( cdf_ii[jj] )
-            maxs[jj] = min( maxs[jj], M1 )
-        end
+        m = minimum.( cdf_ii )
+        M = maximum.( cdf_ii )
+        mins[ii, :] = m
+        maxs[ii, :] = M
 
         if ii == nsamp  # Only at the nsamp'th sample, compute bins
 
-            minmax[1, :] = mins
-            minmax[2, :] = maxs
+            minmax[1, :] = maximum( mins, dims=1 )
+            minmax[2, :] = minimum( maxs, dims=1 )
             # data[:minmax] = minmax
 
             for jj in 1:nL
@@ -85,11 +83,6 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
         chamfer_dists[ ii, : ] = c_ii
     end
 
-    if size( cdfs, 1 ) > 1
-        cdfs = mean( cdfs, dims=1 )
-        chamfer_dists = mean( chamfer_dists, dims=1 )
-    end
-
     return data, cdfs, chamfer_dists
 end
 
@@ -126,8 +119,6 @@ function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
         cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
         ecdfs[ ii, : ] = cdf_ii
         chamfer_dists[ ii, : ] = c_ii
-        println(cdf_ii)
-        sleep(0.1)
     end
 
     if size( ecdfs, 1 ) > 1
