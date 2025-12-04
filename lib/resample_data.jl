@@ -88,7 +88,7 @@ end
 
 
 function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
-    nrep = data[:res_dim][1]
+    nrep = data[:case_dim][2]
     chamfer = data[:chamfer]
     eCDF = data[:eCDF]
     create_kdtree = data[:create_kdtree]
