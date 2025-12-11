@@ -7,8 +7,8 @@ function CIL_ID( distances, LL::Vector{Int} )
     feature_ind = 1
 
     if 0 in LL  # CIL feature
-        cil_dists = distances[:]
-        features[ feature_ind ] = cil_dists
+        # cil_dists = distances[:]
+        features[ feature_ind ] = distances
         filter!( >(0), LL )
         feature_ind += 1
     end

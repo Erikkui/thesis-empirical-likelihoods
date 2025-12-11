@@ -28,10 +28,6 @@ function like_eval( theta, data::Dict{Symbol, Any} )
         end
 
         delta = vec( muu_summaries ) - vec( muu_R0 )
-
-        # fig,ax = lines( diag(C) )
-        # display( fig )
-
         ss = (delta' * (C \ delta)) + logdet(C)
 
         return ss

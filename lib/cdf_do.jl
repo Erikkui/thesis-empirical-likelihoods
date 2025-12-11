@@ -1,14 +1,11 @@
 function cdf_do( D, data::Dict{Symbol, Any} )
     LL = copy( data[:LL] )
-    nL = sum( LL .>= 0 )
+    nL = data[:nL]
 
-    # If D_xy is found, compute features using kdtree.
-    if haskey(data, :D_xy)
+    # If CIL/ID is calculated
+    if any( LL .>= 0 )
         D_xy = data[:D_xy]
         features = CIL_ID( D, D_xy, LL )
-        if -1 in data[:LL] && !data[:bins_done]
-            push!( features, vec(D) )
-        end
     else
         features = [ vec(D) ]
     end

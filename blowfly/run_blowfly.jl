@@ -5,7 +5,7 @@ using Random: randperm
 using Distances: pairwise, Euclidean
 using StatsBase
 using LoopVectorization
-# using NearestNeighbors
+using NearestNeighbors
 using CairoMakie
 using NCDatasets
 using ProgressBars
@@ -32,7 +32,7 @@ function run_blowfly()
     synthetic_data = true       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
-    save_netcdf_file = true     # Save NetCDF file
+    save_netcdf_file = false     # Save NetCDF file
     datafile = "blowflies.csv"  # Data file name, used only if synthetic_data = false
 
     # Initial parameters for blowfly model, also used to generate synthetic data
@@ -51,7 +51,7 @@ function run_blowfly()
 
     ## Methods options
     use_diff = 1
-    diff_order = [1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [ 1 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -60,20 +60,21 @@ function run_blowfly()
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
+    chamfer = 1 # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
-    nsim = 100   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
-    nrep = 5  # Number of resamplings from simulations (always > 1)
+    nsim = 100  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nrep = 1  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_nrep = 50   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
-    res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
+    res_like = 200   # Iterations for data cov/mean calculation
+    res_bins = 100  # Number of resamples for bin calc (BSL/GSL)
+    window = 80
 
     #### MCMC OPTIONS ####
-    nsimu = 30000   # MCMC chain length
-    update_int = 30
+    nsimu = 5000   # MCMC chain length
+    update_int = 20
     adapt_int = 50
     npar = length(theta)
     qcov = Matrix{Float64}( I, npar, npar )*1e-2
@@ -110,7 +111,7 @@ function run_blowfly()
         :resample => resample,
         :case_dim => [nsim, nrep],
         :nbin => nbin,
-        :res_dim => [res_nrep, res_nsamp],
+        :res_dim => [res_like, res_bins],
         :synth_dt => 1.0,
         :synth_init => init,
         :synth_N => t,
@@ -119,6 +120,7 @@ function run_blowfly()
         :nepo => nepo,
         :minmax => nothing,  # Is filled later
         :nL => length(LL),
+        :window => window,
     )
 
     mcmc_options = Dict{Symbol, Any}(
