@@ -53,8 +53,8 @@ function run_L3()
     LL = [ 0, 1, 2 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
-    nsim = 50   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 5  # Number of resamplings from simulations (always > 1)
+    nsim = 10   # Number of model simulations per proposal theta (GSL: nsim = 1)
+    nrep = 30  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)

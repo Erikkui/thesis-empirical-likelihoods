@@ -93,7 +93,7 @@ function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
     eCDF = data[:eCDF]
     create_kdtree = data[:create_kdtree]
     kn = data[:kn]
-    ntot = size( R_obs, 2 )  # Total number of observations
+    ntot = size( R_sim, 2 )  # Total number of observations
 
     # Resample data to create data covariance/mean
     chamfer_dists = Array{Float64}(undef, nrep, 0)
@@ -113,18 +113,17 @@ function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
         # OOB sampling
         in_bag = rand( 1:ntot, ntot)
         unique!( in_bag )
-        x = copy( R_obs[ :, in_bag ] )
-        y = R_sim
+        y = copy( R_sim[:, in_bag] )
 
-        cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
+        cdf_ii, c_ii = create_summaries( R_obs, y, data, create_kdtree, kn )
         ecdfs[ ii, : ] = cdf_ii
         chamfer_dists[ ii, : ] = c_ii
     end
 
-    if size( ecdfs, 1 ) > 1
-        ecdfs = mean( ecdfs, dims=1 )
-        chamfer_dists = mean( chamfer_dists, dims=1 )
-    end
+    # if size( ecdfs, 1 ) > 1
+    #     ecdfs = mean( ecdfs, dims=1 )
+    #     chamfer_dists = mean( chamfer_dists, dims=1 )
+    # end
 
-    return data, vec( ecdfs ), chamfer_dists
+    return data, ecdfs, chamfer_dists
 end

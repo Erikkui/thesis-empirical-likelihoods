@@ -1,5 +1,5 @@
 
-function mcmcrun2(model::Dict{Symbol, Any},
+function mcmcrun2_old(model::Dict{Symbol, Any},
                   data::Dict{Symbol, Any},
                   options::Dict{Symbol, Any},
                   results_prev=nothing)

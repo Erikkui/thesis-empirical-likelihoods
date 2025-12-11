@@ -16,13 +16,13 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
 
 
     ######## Initialize data structures; as undef first for conactenation to work
-    chamfer_dists = Array{Float64}(undef, case_nsim, 0)
-    cdfs = Array{Float64}(undef, case_nsim, 0)
+    chamfer_dists = Array{Float64}(undef, case_nrep, 0)
+    cdfs = Array{Float64}(undef, case_nrep, 0)
     if chamfer == 1
-        chamfer_dists = zeros( case_nsim, length(chamfer_k)*( use_diff*length(diff_order) + 1 ) )
+        chamfer_dists = zeros( case_nrep, length(chamfer_k)*( use_diff*length(diff_order) + 1 ) )
     end
     if eCDF == 1
-        cdfs = zeros( case_nsim, ( 1 + use_diff*length(diff_order) )*data[:nbin]*nL )
+        cdfs = zeros( case_nrep, ( 1 + use_diff*length(diff_order) )*data[:nbin]*nL )
     end
 
 
@@ -50,7 +50,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     if use_diff == 1
         R_sim_all = [ R_sim_all, R_sim_diff_all... ]  # Concatenate all simulated data into vector of vector of matrices
     else
-
         R_sim_all = [ R_sim_all ]
     end
 
@@ -60,18 +59,16 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         Rsim = R_sim_all[dd]
         data[:bins] = bins[dd]
 
-        for (ii, y) in enumerate( Rsim )
+        Rsim = hcat( Rsim... )
+        data, cdfs_ii, chamfer_ii = resample_data( x, Rsim, data )
 
-            data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
-
-            if eCDF == 1
-                cdfs_inds = (dd-1)*data[:nbin]*nL+1:dd*data[:nbin]*nL
-                cdfs[ ii, cdfs_inds ] = cdfs_ii
-            end
-            if chamfer == 1
-                chamf_inds = (dd-1)*length( chamfer_k )+1:dd*length( chamfer_k )
-                chamfer_dists[ ii, chamf_inds ] = chamfer_ii
-            end
+        if eCDF == 1
+            cdfs_inds = (dd-1)*data[:nbin]*nL+1:dd*data[:nbin]*nL
+            cdfs[ :, cdfs_inds ] = cdfs_ii
+        end
+        if chamfer == 1
+            chamf_inds = (dd-1)*length( chamfer_k )+1:dd*length( chamfer_k )
+            chamfer_dists[ :, chamf_inds ] = chamfer_ii
         end
     end
     data[:bins] = bins  # Reset bins in data dict

@@ -1,4 +1,4 @@
-function mcmcrun_stochastic(model::Dict{Symbol, Any},
+function mcmcrun2(model::Dict{Symbol, Any},
                             data::Dict{Symbol, Any},
                             options::Dict{Symbol, Any},
                             results_prev=nothing)
@@ -112,7 +112,7 @@ function mcmcrun_stochastic(model::Dict{Symbol, Any},
             end
         end
 
-        set_description(iter, "Acc: $(round(n_accepted/i, digits=2)) SS: $(round(ss_current, digits=2))")
+        set_description(iter, "Acc: $(round(n_accepted/ii, digits=2)) SS: $(round(ss_current, digits=2))")
     end
 
     # Save results
