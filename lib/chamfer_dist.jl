@@ -36,3 +36,24 @@ function chamfer_dist( x, y, D_xy::Vector{Vector{Float64}}, chamfer_dims::Vector
 
     return chamfer_dist
 end
+
+function chamfer_dist(D, D_sorted, neighbors)
+    kmax = maximum( neighbors )
+    N_xy, N_yx = size(D)
+
+    # Nearest neighbors for each x
+    dists_x_to_y = sum( @views( D_sorted[:, 1:kmax] ) , dims=1 )
+
+    # Nearest neighbors for each y
+    D_sorted = Matrix{Float64}( undef, kmax, N_yx )
+    for ii in axes(D, 2)
+        col_view = view(D, :, ii)
+        D_sorted[:, ii] = partialsort( col_view, 1:kmax )
+    end
+    dists_y_to_x =  sum( D_sorted , dims=2 )'
+
+    # Compute chamfer distance
+    chamfer_dist = dists_x_to_y./N_xy + dists_y_to_x./N_yx
+
+    return chamfer_dist
+end

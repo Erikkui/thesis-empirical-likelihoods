@@ -17,8 +17,8 @@ function resample_bins( R_all, data::Dict{Symbol, Any} )
         in_bag = rand( 1:ntot, ntot)
         unique!( in_bag )
         out_of_bag = setdiff( 1:ntot, in_bag )
-        x = @view R_all[ :, in_bag ]
-        y = @view R_all[ :, out_of_bag ]
+        x = copy( R_all[ :, in_bag ] )
+        y = copy( R_all[ :, out_of_bag ] )
 
         cdf_ii, _ = create_summaries( x, y, data, create_kdtree, kn; same = true )
 
@@ -75,8 +75,8 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
         in_bag = rand( 1:ntot, ntot)
         unique!( in_bag )
         out_of_bag = setdiff( 1:ntot, in_bag )
-        x = @view R_all[ :, in_bag ]
-        y = @view R_all[ :, out_of_bag ]
+        x = copy( R_all[ :, in_bag ] )
+        y = copy( R_all[ :, out_of_bag ] )
 
         cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )
         cdfs[ ii, : ] = cdf_ii
@@ -113,7 +113,7 @@ function resample_data( R_obs, R_sim, data::Dict{Symbol, Any} )
         # OOB sampling
         in_bag = rand( 1:ntot, ntot)
         unique!( in_bag )
-        x = @view R_obs[ :, in_bag ]
+        x = copy( R_obs[ :, in_bag ] )
         y = R_sim
 
         cdf_ii, c_ii = create_summaries( x, y, data, create_kdtree, kn )

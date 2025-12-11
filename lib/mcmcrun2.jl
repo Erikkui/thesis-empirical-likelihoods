@@ -1,123 +1,132 @@
+function mcmcrun_stochastic(model::Dict{Symbol, Any},
+                            data::Dict{Symbol, Any},
+                            options::Dict{Symbol, Any},
+                            results_prev=nothing)
 
-function mcmcrun2(model::Dict{Symbol, Any},
-                  data::Dict{Symbol, Any},
-                  options::Dict{Symbol, Any},
-                  results_prev=nothing)
-
+    # --- Setup ---
     chain_length = options[:nsimu]
     adaptint = options[:adapt_int]
-    update_int = options[:update_int]
+    update_int = options[:update_int] # Threshold for re-evaluation
     sigma2 = model[:sigma2]
     ssfun = model[:ssfun]
-    parameters = data[:theta]
 
-    if isnothing( results_prev )
+    # --- Initialization ---
+    if isnothing(results_prev)
+        parameters = data[:theta]
         qcov = options[:qcov]
-    else        # continue from a previous run, using the last values
-        parameters = copy( results_prev[:last] )
-        qcov = copy( results_prev[:qcov] )
-        Chain = copy( results_prev[:Chain] )
+
+        # Online statistics init
+        global_mean = copy(parameters)
+        global_cov = copy(qcov)
+        n_history = 0
+    else
+        parameters = copy(results_prev[:last])
+        qcov = copy(results_prev[:qcov])
+
+        # Try to recover history, or reset if missing (safer for adaptation)
+        global_mean = get(results_prev, :mean, copy(parameters))
+        global_cov = get(results_prev, :cov, copy(qcov))
+        n_history = get(results_prev, :n_history, 0)
     end
 
-    R = cholesky( qcov ).L
-    n_params = length( parameters )
-    params_old = copy( parameters )
-    n_rejected = 0  # initialize count for rejections
-    n_rejected_stuck = 0
-    chain = zeros( chain_length, n_params )
-    sschain = zeros( chain_length )
-    chain[1, :] = params_old
+    n_params = length(parameters)
 
-    ss = ssfun( params_old, data )  # first SS value
+    # Pre-allocate
+    chain = zeros(Float64, chain_length, n_params)
+    sschain = zeros(Float64, chain_length)
 
+    params_current = copy(parameters)
+    ss_current = ssfun( params_current, data )
 
-    sschain[1] = ss
-    status = 1
+    # Proposal distribution setup
+    # Optimal scaling: (2.4^2 / d)
+    sd = (2.4^2) / n_params
+    epsilon = 1e-6
 
-    iter = ProgressBar( 2:chain_length )
-    ii = 1
-    # try
-        for ii in iter  # Simulation loop
+    # Initial Cholesky
+    R = cholesky(qcov).L
 
-            rr = randn( Float64, n_params )
-            param_new = params_old + R * rr # New parameter candidate
+    n_accepted = 0
+    n_stuck    = 0
 
-            ss_old = ss #+ logprior_old  # old SS
-            ss_new = ssfun( param_new, data ) #+ logprior_proposal  # new SS
+    iter = ProgressBar(1:chain_length)
 
-            random_accept = exp( -0.5*(ss_new - ss_old) / sigma2 )
+    for ii in iter
 
-            if ss_new < ss_old || rand() < random_accept  # Accept proposal?
-                chain[ ii, : ] = param_new  # accept
-                params_old = copy( param_new )
-                ss = ss_new
-                status = 1  # for accept
-            else
-                if status == 1
-                    n_rejected_stuck = 0
-                end  # start counting consequent rejections
-                status = 0
-                n_rejected_stuck += 1
-                if n_rejected_stuck > update_int
-                    ss_new = ssfun( params_old, data )  # update value at params_old
+        # 1. Propose
+        noise = randn(n_params)
+        params_proposal = params_current + R * noise
 
-                    ss = ss_new
-                    chain[ ii, : ] = params_old
-                    n_rejected_stuck = 0
-                else
-                    chain[ ii, : ] = params_old  # reject
-                    n_rejected += 1
-                end
-            end
+        ss_proposal = ssfun(params_proposal, data)
 
-            # ADAPT proposal covariance
-            if ii > 200  # no adaptation too early
-                if ii % adaptint == 0
-                    if !isnothing( results_prev )
-                        C = vcat( Chain, chain[1:ii, :] )
-                    else
-                        C = chain[ 1:ii, : ]
-                    end
-                    qcov = cov(C)
-                    if cond( qcov ) < 1e+10
-                        R = cholesky( qcov ).L
-                    end
-                end
-            end
+        # 2. Metropolis accept/reject
+        log_ratio = -0.5 * (ss_proposal - ss_current) / sigma2
 
-            sschain[ii] = ss
-
-            set_description( iter, "Running MCMC:" )
+        accepted = false
+        if log_ratio >= 0 || log( rand() ) < log_ratio
+            accepted = true
         end
-    # catch e
-    #     println( "Error occurred during MCMC:: ", e, "\nReturning results up to the last successful iteration." )
-    #     accept = 1 - n_rejected / chain_length  # acceptance rate
-    #     results_new = Dict(
-    #     :accept => accept,
-    #     :last => vec( chain[end, :] ),
-    #     :qcov => qcov
-    #     )
 
-    #     if !isnothing( results_prev )
-    #         results_new[:Chain] = vcat( Chain, chain )
-    #     else
-    #         results_new[:Chain] = chain
-    #     end
+        if accepted
+            params_current = params_proposal
+            ss_current = ss_proposal
+            n_accepted += 1
+            n_stuck = 0 # Reset stuck counter on move
+        else
+            # Rejected
+            n_stuck += 1
+            if n_stuck > update_int
+                # If mcmc gets stuck in "too good" proposal
+                ss_recalc = ssfun(params_current, data)
+                ss_current = ss_recalc
+                n_stuck = 0 # Reset counter
+            end
+        end
 
-    #     return chain, sschain, results_new
-    # end
+        # Store
+        chain[ ii, : ] = params_current
+        sschain[ii] = ss_current
 
-    accept = 1 - n_rejected / chain_length  # acceptance rate
+        # 3. Adaptive Update (Recursive Welford)
+        n_history += 1
+        delta = params_current - global_mean
+        global_mean .+= delta ./ n_history
+        delta2 = params_current - global_mean
+
+        if n_history > 1
+             factor1 = (n_history - 2) / (n_history - 1)
+             factor2 = 1.0 / (n_history - 1)
+             @. global_cov = factor1 * global_cov + factor2 * (delta * delta2')
+        end
+
+        # 4. Update Proposal Cholesky
+        if ii > 100 && ii % adaptint == 0
+            prop_cov = sd .* global_cov
+            for k in 1:n_params
+                prop_cov[k,k] += epsilon
+            end
+            try
+                R = cholesky( Symmetric(prop_cov) ).L
+            catch
+                # Ignore non-posdef failures temporarily
+            end
+        end
+
+        set_description(iter, "Acc: $(round(n_accepted/i, digits=2)) SS: $(round(ss_current, digits=2))")
+    end
+
+    # Save results
     results_new = Dict(
-        :accept => accept,
-        :last => vec( chain[end, :] ),
-        :qcov => qcov
+        :accept    => n_accepted / chain_length,
+        :last      => chain[end, :],
+        :qcov      => global_cov,
+        :mean      => global_mean,
+        :n_history => n_history,
+        :Chain     => chain
     )
 
-    if !isnothing( results_prev )
-        results_new[:Chain] = vcat( Chain, chain )
-    else
-        results_new[:Chain] = chain
+    if !isnothing(results_prev)
+        results_new[:Chain] = vcat(results_prev[:Chain], chain)
     end
 
     return chain, sschain, results_new

@@ -1,3 +1,9 @@
+using BenchmarkTools
+using Distances
+using LoopVectorization
+using StaticArrays
+using LinearAlgebra
+
 function lorenz3!(du, u, params, t)
     du[1] = params[1] * (u[2] - u[1])
     du[2] = u[1] * (params[2] - u[3]) - u[2]
@@ -13,7 +19,7 @@ function lorenz_static(u, p, t)
     dy = x * (ρ - z) - y
     dz = x * y - β * z
 
-    return SVector(dx, dy, dz)
+    return SA[ dx, dy, dz ]
 end
 
 function lorenz_solve(init, theta, Ndata; dt=1.0)
@@ -54,3 +60,11 @@ function lorenz_solve_2( init::Vector{Float64}, theta::Vector{Float64}, Ndata; d
 
     return R0
 end
+
+theta = [10.0, 28.0, 8/3]
+init = SA[12.577, 19.471, 23.073]
+
+@btime lorenz_solve( init, theta, 200 )
+
+init = [12.577, 19.471, 23.073]
+@btime lorenz_solve_2( init, theta, 200 )

@@ -1,9 +1,6 @@
 
 function create_summaries( x, y, data, make_kdtree, kn; same = false )
     # Create summary statistics: ecdf's and/or chamfer distances
-    data_dim = size( data[:R0_all][1], 1 )
-    x = reshape( x, data_dim, : )
-    y = reshape( y, data_dim, : )
 
     # Whether to build KDTree
     D_xy =  Vector{Vector{Float64}}(undef, 0)
@@ -15,12 +12,16 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
         data[:D_xy] = D_xy
     end
 
-    D = Matrix{Float64}(undef, 0, 0)
     if 0 in data[:LL] || ( !make_kdtree && ( data[:chamfer] == 1 || any( data[:LL] .>= 0 ) ) )
-        D = pairwise( Euclidean(), x, y, dims = 2 )
+        D = pairwise_turbo( x, y )
 
         if ( data[:chamfer] == 1 || any( data[:LL] .>= 1 ) ) && !make_kdtree
-            sort!( D; dims=2 )
+            D_xy_sorted = Matrix{Float64}( undef, size(x, 2), kn )
+            for ii in axes(D, 1)
+                row_view = view(D, ii, :)
+                D_xy_sorted[ii, :] = partialsort( row_view, 1:kn )
+            end
+            data[:D_xy_sorted] = D_xy_sorted
         end
     end
 
@@ -48,7 +49,7 @@ function create_summaries( x, y, data, make_kdtree, kn; same = false )
         if make_kdtree
             c_ii = chamfer_dist( x, y, D_xy, data[:chamfer_k] )
         else
-            c_ii = chamfer_dist( D, data[:chamfer_k] )
+            c_ii = chamfer_dist( D, data[:D_xy_sorted], data[:chamfer_k] )
         end
     end
 

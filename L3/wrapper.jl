@@ -62,8 +62,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
 
         for (ii, y) in enumerate( Rsim )
 
-            # println( x, "\n", y)
-
             data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
 
             if eCDF == 1
