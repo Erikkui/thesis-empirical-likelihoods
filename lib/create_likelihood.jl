@@ -5,14 +5,14 @@ function create_likelihood( data::Dict{Symbol, Any} )
     # Check if kdtree needs to be created: either chamfer = 1 or ID features are used
     data = determine_kdtree( data )
 
+    # Concatenate all nepo R0 matrices, R0 = Vector{ Matrix{Float64} }
+    data[:R0_all] = [ hcat( data[:R0]... ) ]    # Vector a single dim x nobs*nepo matrix
+
     # Initialize bin storage
-    data[:bins] = Dict{Symbol, Any}()
+    data[:bins] = Vector{ Any }( nothing, length( data[:R0_all] ) )
     if data[:eCDF] == 1
         data[:bins] = Vector{ Vector{ Vector{Float64} } }(undef, 1 + length(data[:diff_order])*data[:use_diff] )
     end
-
-    # Concatenate all nepo R0 matrices, R0 = Vector{ Matrix{Float64} }
-    data[:R0_all] = [ hcat( data[:R0]... ) ]    # Vector a single dim x nobs*nepo matrix
 
     if data[:use_diff] == 1
         data[:R0_diff_all] = [ hcat( data[:R0_diff][ii]... ) for ii in eachindex(data[:R0_diff]) ]
@@ -23,10 +23,12 @@ function create_likelihood( data::Dict{Symbol, Any} )
 
     data[:bins_done] = false
     # Create bins: bins[ii] is for signal/difference, and each each row is for CIL/ID feature
-    for ii in eachindex( data[:R0_all] )
-        R0_ii = data[:R0_all][ii]
-        data, bins = resample_bins( R0_ii, data )
-        data[:bins][ii] = bins
+    if data[:eCDF] == 1
+        for ii in eachindex( data[:R0_all] )
+            R0_ii = data[:R0_all][ii]
+            data, bins = resample_bins( R0_ii, data )
+            data[:bins][ii] = bins
+        end
     end
     data[:bins_done] = true
 
@@ -37,7 +39,6 @@ function create_likelihood( data::Dict{Symbol, Any} )
     for ii in eachindex( data[:R0_all] )    # For each signal/difference
         RR_ii = data[:R0_all][ii]
         data[:bins] = bins[ii]
-
         data, cdfs_ii, chamfer_ii = resample_data( RR_ii, data )
 
         # Normalize chamfer due to being possibly very large compared to cdf values
@@ -80,7 +81,7 @@ function determine_kdtree( data )
     kn_c = 0
     kn_e = 0
     if data[:chamfer] == 1
-        kn_c = length( data[:chamfer_k] )
+        kn_c = maximum( data[:chamfer_k] )
     end
     if data[:eCDF] == 1
         kn_e = maximum( data[:LL] )

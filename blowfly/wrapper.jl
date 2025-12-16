@@ -5,13 +5,11 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     burn_in = data[:synth_burn_in]
     init = data[:synth_init]
     R0_all = data[:R0_all]
-    nobs = data[:nobs]
-    case_nsim, case_nrep = data[:case_dim]
+    case_nsim, _ = data[:case_dim]
     chamfer = data[:chamfer]
     chamfer_k = data[:chamfer_k]
     eCDF = data[:eCDF]
     bins = data[:bins]
-    LL = data[:LL]
     nL = data[:nL]
     diff_order = data[:diff_order]
     use_diff = data[:use_diff]
@@ -25,7 +23,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     if eCDF == 1
         cdfs = zeros( case_nsim, ( 1 + use_diff*length(diff_order) )*data[:nbin]*nL )
     end
-
+# println( chamfer_dists)
     ######### Simulations for proposal parameter
     R_sim_all = Vector{ Matrix{Float64} }(undef, 0 )
     if use_diff == 1
@@ -36,7 +34,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     end
 
     # Generate simulated data
-    for sim in 1:case_nsim
+    for _ in 1:case_nsim
         N, _ = blowfly_solve( theta, t, N_init = init, burn_in = burn_in )
         push!( R_sim_all, N )
         if use_diff == 1
@@ -52,7 +50,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     else
         R_sim_all = [ R_sim_all ]
     end
-
+# println( chamfer_dists)
     # Create eCDFs and chamfer distances for each simulations
     for dd in eachindex(R0_all) # Loop over data types: original and differences
         x = R0_all[dd]
@@ -62,6 +60,11 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         for ii in eachindex( R_sim_dd )
             y = copy( R_sim_dd[ii] )
             data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
+
+            if size( cdfs_ii, 1 ) > 1
+                cdfs_ii = mean( cdfs_ii, dims=1 )
+                chamfer_ii = mean( chamfer_ii, dims=1 )
+            end
 
             if eCDF == 1
                 cdfs_inds = (dd-1)*data[:nbin]*nL+1:dd*data[:nbin]*nL
@@ -78,9 +81,10 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     # Normalize chamfer
     means = mean(chamfer_dists, dims = 1)
     stds = std( chamfer_dists, dims = 1)
-    chamf_norm = (chamfer_dists .- means) ./ stds
+    chamfer_dists = (chamfer_dists .- means) ./ stds
 
-    summary_stats = [ cdfs chamf_norm ]
+    # println( chamfer_dists)
+    summary_stats = [ cdfs chamfer_dists ]
 
     if data[:log] == "log"
         summary_stats = log.(summary_stats)

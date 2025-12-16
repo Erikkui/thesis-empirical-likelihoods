@@ -51,68 +51,93 @@ function mcmcrun2(model::Dict{Symbol, Any},
 
     iter = ProgressBar(1:chain_length)
 
-    for ii in iter
+    try
+        for ii in iter
 
-        # 1. Propose
-        noise = randn(n_params)
-        params_proposal = params_current + R * noise
+            # 1. Propose
+            noise = randn(n_params)
+            params_proposal = params_current + R * noise
 
-        ss_proposal = ssfun(params_proposal, data)
+            ss_proposal = ssfun(params_proposal, data)
 
-        # 2. Metropolis accept/reject
-        log_ratio = -0.5 * (ss_proposal - ss_current) / sigma2
+            # 2. Metropolis accept/reject
+            log_ratio = -0.5 * (ss_proposal - ss_current) / sigma2
 
-        accepted = false
-        if log_ratio >= 0 || log( rand() ) < log_ratio
-            accepted = true
-        end
-
-        if accepted
-            params_current = params_proposal
-            ss_current = ss_proposal
-            n_accepted += 1
-            n_stuck = 0 # Reset stuck counter on move
-        else
-            # Rejected
-            n_stuck += 1
-            if n_stuck > update_int
-                # If mcmc gets stuck in "too good" proposal
-                ss_recalc = ssfun(params_current, data)
-                ss_current = ss_recalc
-                n_stuck = 0 # Reset counter
+            accepted = false
+            if log_ratio >= 0 || log( rand() ) < log_ratio
+                accepted = true
             end
-        end
 
-        # Store
-        chain[ ii, : ] = params_current
-        sschain[ii] = ss_current
-
-        # 3. Adaptive Update (Recursive Welford)
-        n_history += 1
-        delta = params_current - global_mean
-        global_mean .+= delta ./ n_history
-        delta2 = params_current - global_mean
-
-        if n_history > 1
-             factor1 = (n_history - 2) / (n_history - 1)
-             factor2 = 1.0 / (n_history - 1)
-             @. global_cov = factor1 * global_cov + factor2 * (delta * delta2')
-        end
-
-        # 4. Update Proposal Cholesky
-        if ii > 100 && ii % adaptint == 0
-            prop_cov = sd .* global_cov
-            for k in 1:n_params
-                prop_cov[k,k] += epsilon
+            if accepted
+                params_current = params_proposal
+                ss_current = ss_proposal
+                n_accepted += 1
+                n_stuck = 0 # Reset stuck counter on move
+            else
+                # Rejected
+                n_stuck += 1
+                if n_stuck > update_int
+                    # If mcmc gets stuck in "too good" proposal
+                    ss_recalc = ssfun(params_current, data)
+                    ss_current = ss_recalc
+                    n_stuck = 0 # Reset counter
+                end
             end
-            try
-                R = cholesky( Symmetric(prop_cov) ).L
-            catch
-                # Ignore non-posdef failures temporarily
+
+            # Store
+            chain[ ii, : ] = params_current
+            sschain[ii] = ss_current
+
+            # 3. Adaptive Update (Recursive Welford)
+            n_history += 1
+            delta = params_current - global_mean
+            global_mean .+= delta ./ n_history
+            delta2 = params_current - global_mean
+
+            if n_history > 1
+                factor1 = (n_history - 2) / (n_history - 1)
+                factor2 = 1.0 / (n_history - 1)
+                @. global_cov = factor1 * global_cov + factor2 * (delta * delta2')
             end
+
+            # 4. Update Proposal Cholesky
+            if ii > 100 && ii % adaptint == 0
+                prop_cov = sd .* global_cov
+                for k in 1:n_params
+                    prop_cov[k,k] += epsilon
+                end
+                try
+                    R = cholesky( Symmetric(prop_cov) ).L
+                catch
+                    # Ignore non-posdef failures temporarily
+                end
+            end
+
+            set_description(iter, "Acc: $(round(n_accepted/ii, digits=2)) SS: $(round(ss_current, digits=2))")
+        end
+    catch e
+        println( "Error occurred during MCMC:: ", e, "\nReturning results up to the last successful iteration.")
+
+        # Remove rows from chain that are full zeros
+        chain = chain[ 1:ii-1, : ]
+        chain_length = size(chain, 1)
+        sschain = sschain[ 1:ii-1 ]
+
+        # Save results
+        results_new = Dict(
+            :accept    => n_accepted / chain_length,
+            :last      => chain[end, :],
+            :qcov      => global_cov,
+            :mean      => global_mean,
+            :n_history => n_history,
+            :Chain     => chain
+        )
+
+        if !isnothing(results_prev)
+            results_new[:Chain] = vcat(results_prev[:Chain], chain)
         end
 
-        set_description(iter, "Acc: $(round(n_accepted/ii, digits=2)) SS: $(round(ss_current, digits=2))")
+        return chain, sschain, results_new
     end
 
     # Save results

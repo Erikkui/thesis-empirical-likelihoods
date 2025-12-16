@@ -2,7 +2,7 @@ clc
 % Specify any number of ncfiles, put them in one vector and give legends
 % for each file. mcmcplot documnetation can be found from the function file
 
-ncfile1 = "blowfly_bsl_cov_n201n1_s100_r10_dt12_eCDF-20_synth" + ".nc";
+ncfile1 = "OU_bsl_cov_n201n1_s200_r1_dt1_eCDF-1_synth" + ".nc";
 % ncfile2 = "blowfly_gsl_cov_n251n50_s100_r1_dt1_eCDF-20_synth" + ".nc";
 % ncfile3 = "blowfly_v2_bsl_cov_dt1_n151n1_s10r40_eCDF-2-10_synth" + ".nc";
 % ncfile4 = "blowfly_bsl_cov_dt1_n359n1_s5r20_eCDF0_set4" + ".nc";
@@ -35,10 +35,10 @@ data0 = str2num(ncreadatt( ncfile1, "/", "R0_all" ));
 data = data0(1:201);
 N_init = str2num(ncreadatt( ncfile1, "/", "R0_full" ));
 N_init = N_init(1);
-
+%%
 chain = ncread( ncfile1, "chain" );
-chain = chain( burn:end, : );
-
+% chain = chain( burn:end, : );
+%%
 tt = 0:length(data)-1;
 fig = figure;
 hold on

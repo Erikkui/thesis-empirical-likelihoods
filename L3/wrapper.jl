@@ -73,6 +73,11 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     end
     data[:bins] = bins  # Reset bins in data dict
 
+    # Normalize chamfer
+    means = mean(chamfer_dists, dims = 1)
+    stds = std( chamfer_dists, dims = 1)
+    chamfer_dists = (chamfer_dists .- means) ./ stds
+
     summary_stats = [ cdfs chamfer_dists ]
 
     if data[:log] == "log"

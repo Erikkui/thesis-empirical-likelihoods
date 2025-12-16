@@ -3,7 +3,7 @@ function cdf_do( D, data::Dict{Symbol, Any} )
     nL = data[:nL]
 
     # If CIL/ID is calculated
-    if any( LL .>= 0 )
+    if any( LL .>= 1 )
         D_xy = data[:D_xy]
         features = CIL_ID( D, D_xy, LL )
     else

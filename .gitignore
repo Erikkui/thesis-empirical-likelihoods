@@ -3,7 +3,7 @@
 *local*
 *.h5
 *.json
-*.nc
+# *.nc
 *csv#
 # Compiled source #
 ###################

@@ -1,0 +1,62 @@
+Information on MCMC BSL runs done for investigating the  effect of choice of summary statistics and number of simulations on the parameter inference. Each model has been first run on chain of length 10000 with multiple different combinations of settings. The results of chain and marginal posteriors were visually inspected, after which best perofmring cases were chosen for actual runs for the thesis with 30000 long chains. The test and thesis runs are separated by three hyphens.
+
+OU
+    1. -1, no diff, no chamfer, xax, nsim = 100, nrep = 1 (Ei hyvä)
+    2. -1, no diff, no chamfer, yax, nsim = 100, nrep = 1 (Ei hyvä)
+    3. no ecdf, no diff, chamfer 1 2, yax, nsim = 100, nrep = 1 (Ei hyvä)
+    4. -1, no diff, chamfer 1 2, yax, nsim = 100, nrep = 1 (Ei hyvä)
+    5. -1, diff 1, no chamfer, yax, nsim = 100, nrep = 1 (OKish)
+    6. -1, diff 1,2, no chamfer, xax, nsim = 100, nrep = 1 (Okish, worse than 5.)
+    7. -1, diff 1,2, chamfer 1 2, xax, nsim = 100, nrep = 1 (bad)
+    8. -1, diff 1,2, no chamfer, xax, nsim = 10, nrep = 50 (Ok, better than 5.)
+    9. -1, diff 1,2, no chamfer, xax, nsim = 15, nrep = 100 (Ok, started to show divergence)
+    10. -1, diff 1, no chamfer, xax, nsim = 15, nrep = 100 (Okish, worse than 5.)
+
+    11. -1, diff 1, no chamfer, xax, nsim = 200, nrep = 1 (Good)
+
+    12. -1, diff 1,2, no chamfer, xax, nsim = 200, nrep = 1 (Good, a bit worse than 11.)
+    13. -1, diff 1, no chamfer, yax, nsim = 200, nrep = 1 (A bit worse than 12.)
+    14. -1, diff 1,2, no chamfer, yax, nsim = 200, nrep = 1 (Bad)
+
+    15. -1, diff 1, no chamfer, xax, nsim = 200, nrep = 1 (same options as 11; longer chain)
+
+    16. -1, diff 1, chamfer 1 2, xax, nsim = 200, nrep = 1 (bad)
+
+    ---
+
+    17. Same as 11, longer chain 30000 (BEST) (DONE)
+    18. Same as 17, but nsim = 500, chain 30000 (ÖVERI) (DONE)
+    19. Same as 16, but yax and longer chain 30000 (SHOW CHAMF NOT WORKING HERE??) (DONE)
+    20. Same as 1, but nsim = 200, longer chain 30000 (SIGNAL ALONE NOT GOOD) (DONE)
+    21. Same as 19, but xax (CHAMFER NOT GOOD WITH XAX) (DONE)
+
+
+blowfly
+    1. -1, no diff, no chamfer, yax, nsim = 200, nrep = 1 (bad shape, breaks, do not use!)
+    2. -1, diff 1, no chamferm, yax, nsim = 200, nrep = 1 (starts good, but breaks somewhat?)
+    3. -1, diff 1, chamfer 1 2, yax, nsim = 200, nrep = 1 (a bit weird posterior shapes, otherwise like 2)
+    4. -1, diff 1, chamfer 1 2, yax, nsim = 500, nrep = 1 (bit better than 4, but still a bit off)
+    5. -1, diff 1 2, no chamfer, yax, nsim 200, nrep = 1 (like 2 , but a bit better)
+    6. -1, diff 1, 2, chamfer 1, 2, yax, nsim = 200, nrep = 1 (feels like the best so far, but diverges after 7500 or so)
+    7. -1, diff 1 2, chamfer 1 2 3 8 9 10 11 18 19 20 (again seems to start to diverge)
+    8. -1, diff 1, chamfer 1 2, yax, nsim = 20, nrep = 100 (bit better than 4, but still a bit off)
+
+
+L63
+    1. 0, no diff, no chaf, xax, nsim = 5, nrep = 30 (OKish)
+    2. 0, no diff, no chaf, yax, nsim = 5, nrep = 30 (Okish, better than 1.)
+    3. 0, diff 1, no chaf, yax, nsim = 5, nrep = 30 (Good, Better than 2.)
+    4. 012, diff 1, no chaf, yax, nsim = 5, nrep = 30 (similar to 3.)
+    5. 012, diff 1, no chaf, yax, nsim = 10, nrep = 50 (good, better than 3 and 4)
+
+    6. 012, diff 1, chamfer 1 2, yax, nsim = 10, nrep = 30 (Good, better than 5.)
+
+    7. 0123, diff 1, chamfer 1 2 3, yax, nsim = 5, nrep = 20 (Good, not as good as 6.)
+
+    ---
+
+    8. Same as 6, chain length 30000 (BEST) (DONE)
+    9. Same as 2 but with nsim = 10, nrep 30 chain length 30000 (WORST) (DONE)
+    10. Same as 3, but with nsim = 10, nrep = 30, chain length 30000 (SUPPLEMENTARY) (DONE)
+    11. Same as 4, but nsim = 10, nrep = 30, chain len 30000 (SUPPLEMENTARY) (DONE)
+    12. Same as 6, but nsim = 5, nrep = 10, chain len 30000 (SUPPLEMENTARY, same as 6 but lower reps) (DONE)

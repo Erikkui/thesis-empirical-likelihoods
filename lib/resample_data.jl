@@ -17,10 +17,11 @@ function resample_bins( R_all, data::Dict{Symbol, Any} )
         # If signal, resample a continuous partition. Else OOB sampling
         if -1 in data[:LL]
             window = data[:window]
-            start_ind = rand( 1:ntot-window )
+            start_ind = rand( 2:ntot-window )
             end_ind = start_ind+window
+            slice_inds = vcat( 1:start_ind-1, end_ind+1:ntot )
             y = copy( R_all[ 1:1, start_ind:end_ind] )
-            x = copy( R_all[ 1:1, 1:kn+1 ] )    # Not actually needed in bin creation
+            x = copy( R_all[ 1:1, slice_inds ] )    # Not actually needed in bin creation
         else
             # OOB sampling
             in_bag = rand( 1:ntot, ntot)
@@ -82,11 +83,13 @@ function resample_data( R_all, data::Dict{Symbol, Any} )
 
     for ii in 1:nrep
         # If signal, resample a continuous partition. Else OOB sampling
-        if -1 in data[:LL]
+        if -1 in data[:LL] || data[:eCDF] == 0
             window = data[:window]
-            start_ind = rand( 1:length(R_all)-window )
-            y = copy( R_all[ 1:1, start_ind:start_ind+window] )
-            x = copy( R_all[ 1:1, 1:kn+1 ] )    # Not actually needed in data mean calculation
+            start_ind = rand( 2:ntot-window )
+            end_ind = start_ind+window
+            slice_inds = vcat( 1:start_ind-1, end_ind+1:ntot )
+            y = copy( R_all[ 1:1, start_ind:end_ind] )
+            x = copy( R_all[ 1:1, slice_inds ] )
         else
             # OOB sampling
             in_bag = rand( 1:ntot, ntot)
@@ -129,7 +132,14 @@ function resample_data( R_data, R_sim, data::Dict{Symbol, Any} )
 
     for ii in 1:nrep
         if -1 in data[:LL]
-            cdf_ii, c_ii = create_summaries( R_data, R_sim, data, create_kdtree, kn )
+            if nrep == 1
+                cdf_ii, c_ii = create_summaries( R_data, R_sim, data, create_kdtree, kn )
+            else
+                window = data[:window]
+                start_ind = rand( 1:ntot-window )
+                y = copy( R_sim[ 1:1, start_ind:start_ind+window] )
+                cdf_ii, c_ii = create_summaries( R_data, y, data, create_kdtree, kn )
+            end
         else
             # OOB sampling
             in_bag = rand( 1:ntot, ntot)
@@ -139,11 +149,6 @@ function resample_data( R_data, R_sim, data::Dict{Symbol, Any} )
         end
         ecdfs[ ii, : ] = cdf_ii
         chamfer_dists[ ii, : ] = c_ii
-    end
-
-    if size( ecdfs, 1 ) > 1
-        ecdfs = mean( ecdfs, dims=1 )
-        chamfer_dists = mean( chamfer_dists, dims=1 )
     end
 
     return data, ecdfs, chamfer_dists

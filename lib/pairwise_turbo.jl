@@ -4,7 +4,7 @@ function pairwise_turbo(x::AbstractArray, y::AbstractArray)
     d = size(x, 1)
 
     # Pre-allocate output
-    out = Vector{Float64}(undef, n_x*n_y)
+    out = Matrix{Float64}(undef, n_x, n_y)
 
     # @tturbo applies threading and SIMD
     @tturbo for j in 1:n_y
@@ -14,8 +14,9 @@ function pairwise_turbo(x::AbstractArray, y::AbstractArray)
                 diff = x[k, i] - y[k, j]
                 s += diff * diff
             end
-            out[ (j-1)*n_y + i ] = s
+            out[ i, j ] = s
         end
+
     end
-    return out
+    return vec(out)
 end

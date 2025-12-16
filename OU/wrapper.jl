@@ -5,7 +5,7 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     init = data[:synth_init]
     R0_all = data[:R0_all]
     nobs = data[:nobs]
-    case_nsim, case_nrep = data[:case_dim]
+    case_nsim, _ = data[:case_dim]
     chamfer = data[:chamfer]
     chamfer_k = data[:chamfer_k]
     eCDF = data[:eCDF]
@@ -27,21 +27,21 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     end
 
     ######### Simulations for proposal parameter
-    R_sim_all = Matrix{Float64}(undef, case_nsim, nobs)
+    R_sim_all = Vector{ Matrix{Float64} }(undef, 0 )
     if use_diff == 1
-        R_sim_diff_all = Vector{ Matrix{Float64} }(undef, length( diff_order ) )
+        R_sim_diff_all = Vector{ Vector{ Matrix{Float64} } }(undef, length( diff_order ) )
         for ii in eachindex( diff_order )
-            R_sim_diff_all[ii] = Matrix{ Float64 }(undef, case_nsim, nobs - 2*diff_order[ii] )
+            R_sim_diff_all[ii] = Vector{ Matrix{Float64} }(undef, 0 )
         end
     end
 
-    for sim in 1:case_nsim
+    for _ in 1:case_nsim
         X = OU_solve( theta, init, Ndata; dt = dt )
-        R_sim_all[ sim, : ] = X
+        push!( R_sim_all, X )
         if use_diff == 1
-            X_diffs = calculate_diffs( X, diff_order, dt )
+            N_diffs = calculate_diffs( X, diff_order, dt )
             for ii in eachindex( diff_order )
-                R_sim_diff_all[ii][ sim, : ] = X_diffs[ii]
+                push!( R_sim_diff_all[ii], N_diffs[ii] )
             end
         end
     end
@@ -52,8 +52,6 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         R_sim_all = [ R_sim_all ]
     end
 
-    cdfs_ii_2 = Vector{Float64}(undef, 0)
-    chamfer_ii = Vector{Float64}(undef, 0)
     # Create eCDFs and chamfer distances for each simulations
     for dd in eachindex(R0_all) # Loop over data types: original and differences
         x = R0_all[dd]
@@ -61,24 +59,12 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
         data[:bins] = bins[dd]
 
         for (ii, y) in enumerate( eachrow( R_sim_dd ) )
-            if -1 in data[:LL]          # Signal feature
-                cdfs_ii, _ = empcdf( y, nx=data[:nbin], x=data[:bins][1] )
-                data[:LL] = data[:LL][2:end]
-                data[:bins] = data[:bins][2:end]
-                if ~isempty( data[:LL] ) || chamfer == 1
-                    if data[:resample] != 0
-                        data, cdfs_ii_2, chamfer_ii = resample_data( x, y, data )
-                    end
+            y = copy( R_sim_dd[ii] )
+            data, cdfs_ii, chamfer_ii = resample_data( x, y, data )
 
-                end
-                data[:LL] = LL
-                data[:bins] = bins[dd]
-
-                cdfs_ii = vcat( vec(cdfs_ii), cdfs_ii_2 )
-            else
-                if data[:resample] != 0
-                    cdfs_ii, chamfer_ii = resample_data( y, data )
-                end
+            if size( cdfs_ii, 1 ) > 1
+                cdfs_ii = mean( cdfs_ii, dims=1 )
+                chamfer_ii = mean( chamfer_ii, dims=1 )
             end
 
             if eCDF == 1
@@ -93,7 +79,10 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     end
     data[:bins] = bins  # Reset bins in data dict
 
-
+    # Normalize chamfer
+    means = mean(chamfer_dists, dims = 1)
+    stds = std( chamfer_dists, dims = 1)
+    chamfer_dists = (chamfer_dists .- means) ./ stds
 
     summary_stats = [ cdfs chamfer_dists ]
 

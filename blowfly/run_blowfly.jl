@@ -32,7 +32,7 @@ function run_blowfly()
     synthetic_data = true       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
-    save_netcdf_file = false     # Save NetCDF file
+    save_netcdf_file = true     # Save NetCDF file
     datafile = "blowflies.csv"  # Data file name, used only if synthetic_data = false
 
     # Initial parameters for blowfly model, also used to generate synthetic data
@@ -51,7 +51,7 @@ function run_blowfly()
 
     ## Methods options
     use_diff = 1
-    diff_order = [ 1 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [ 1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -60,22 +60,22 @@ function run_blowfly()
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 1 # 0 for no chamfer distance, 1 for chamfer distance
-    chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
-    nsim = 100  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
-    nrep = 1  # Number of resamplings from simulations (always > 1)
+    chamfer = 0 # 0 for no chamfer distance, 1 for chamfer distance
+    chamfer_k = [ 1, 2, 3, 8, 9, 10, 11, 18, 19, 20 ] # Neighbors to consider for chamfer distance
+    nsim = 20  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nrep = 100 # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_like = 200   # Iterations for data cov/mean calculation
+    res_like = 300   # Iterations for data cov/mean calculation
     res_bins = 100  # Number of resamples for bin calc (BSL/GSL)
     window = 80
 
     #### MCMC OPTIONS ####
-    nsimu = 5000   # MCMC chain length
-    update_int = 20
-    adapt_int = 50
+    nsimu = 10000   # MCMC chain length
+    update_int = 15
+    adapt_int = 20
     npar = length(theta)
     qcov = Matrix{Float64}( I, npar, npar )*1e-2
 
@@ -136,8 +136,8 @@ function run_blowfly()
         :ssfun => ssfun
     )
 
-    # chain, sschain, results, data = blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
-    @profview blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
+    chain, sschain, results, data = blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
+    # @profview blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
     println( "Run completed. Acceptance rate: ", results[:accept] )
 
     return chain, sschain, results, data
