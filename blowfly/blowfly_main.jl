@@ -51,6 +51,7 @@ function blowfly_main( data, options, model; datafile = nothing )
     data[ :qq_theor_q ] = theo_q
     data[ :qq_D_sorted ] = D_sorted
     sleep(1)
+    println( size( summary_stats ) )
 
     # Evaluate likelihood before MCMC
     theta = data[:params]

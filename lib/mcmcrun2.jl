@@ -50,7 +50,6 @@ function mcmcrun2(model::Dict{Symbol, Any},
     n_stuck    = 0
 
     iter = ProgressBar(1:chain_length)
-
     try
         for ii in iter
 
@@ -119,9 +118,10 @@ function mcmcrun2(model::Dict{Symbol, Any},
         println( "Error occurred during MCMC:: ", e, "\nReturning results up to the last successful iteration.")
 
         # Remove rows from chain that are full zeros
-        chain = chain[ 1:ii-1, : ]
+        nonzero_inds = sum( abs.(chain), dims=2 ) .> 0
+        chain = chain[ nonzero_inds[:,1], : ]
         chain_length = size(chain, 1)
-        sschain = sschain[ 1:ii-1 ]
+        sschain = sschain[ 1:chain_length ]
 
         # Save results
         results_new = Dict(

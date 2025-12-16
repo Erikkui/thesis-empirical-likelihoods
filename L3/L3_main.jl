@@ -27,7 +27,7 @@ function L3_main( data, options, model; datafile = nothing )
     data[ :chi2_x ] = x
     data[ :chi2_pdf ] = chi_pf
     data[ :chi2_hist ] = khi_n
-    data[ :qq_theo_q ] = theo_q
+    data[ :qq_theor_q ] = theo_q
     data[ :qq_D_sorted ] = D_sorted
     sleep(1)
 

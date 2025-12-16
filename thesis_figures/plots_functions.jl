@@ -2,6 +2,7 @@ using CairoMakie
 using NCDatasets
 using LaTeXStrings
 using MathTeXEngine
+using Statistics
 
 
 function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vector{String}; burn_in::Int=0)
@@ -134,8 +135,8 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
                 xgridvisible = true,
                 ygridvisible = true,
                 yticks = ticks_y,
-                xticklabelsize = 18,
-                yticklabelsize = 18
+                # xticklabelsize = 18,
+                # yticklabelsize = 18
             )
             push!(axs, ax)
 
@@ -193,7 +194,7 @@ function plot_normality_checks(nc_path::String)
 
     # 2. Setup Theme (Consistent with mcmc_plots)
     colors = Makie.to_colormap(:seaborn_dark)
-    set_theme!(palette = (; color = colors), fontsize = 20)
+    set_theme!(palette = (; color = colors), fontsize = 24)
 
     # 3. Initialize Figure
     # Width 1200 to match the side-by-side style of previous plots
@@ -257,7 +258,7 @@ function plot_model_predictions(nc_path::String, model_name::String)
 
     # Parse R0_all (vector of vector of matrices)
     R0_all_parsed = eval(Meta.parse(R0_all))
-    ground_truth = R0_all_parsed[1][1]  # First matrix of the vector of vector of matrices
+    ground_truth = R0_all_parsed[1]  # First matrix of the vector of vector of matrices
 
     # 2. Randomly Sample 1000 Parameter Vectors
     n_samples = 1000
@@ -267,45 +268,120 @@ function plot_model_predictions(nc_path::String, model_name::String)
 
     # 3. Generate Data Based on Model
     model_func = nothing
-
+    realizations = Vector{Matrix{Float64}}(undef, 1000)
     if model_name == "OU"
         model_func = OU_solve
-        x0 = ds.attrib[""]
-        Ndata
-        realizations = [model_func( params) for params in eachrow(sampled_params)]
+        init = 3.0
+        Ndata = 200
+        for ii in 1:1000
+            params = sampled_params[ii, :]
+            realizations[ii] = model_func( params, init, Ndata)
+        end
     elseif model_name == "L3"
-        model_func = lorenz_solve
-        realizations = [model_func(params) for params in eachrow(sampled_params)]
+        # model_func = lorenz_solve
+
     elseif model_name == "blowfly"
         model_func = blowfly_solve
-        realizations = [model_func(params) for params in eachrow(sampled_params)]
+        init = 180  # Initial condition for synthetic data
+        N = 200     # Length of synthetic data
+        burn_in = 0    # Time after which the data is considered "stable"
+        t = N+1  # Time vector from 0 to N
+        for ii in 1:1000
+            params = sampled_params[ii, :]
+            realizations[ii] = model_func(params, t; n_init = init, burn_in = burn_in)[1]
+        end
     else
         error("Invalid model name. Options: 'OU', 'L3', 'blowfly'")
     end
     close(ds)
 
-    # 4. Calculate 95% Confidence Interval
-    lower_ci = map(x -> quantile(x, 0.025), eachcol(realizations))
-    upper_ci = map(x -> quantile(x, 0.975), eachcol(realizations))
-    mean_prediction = mean(realizations, dims=2)
+    if model_name == "OU" || model_name == "blowfly"
 
-    # 5. Plot Ground Truth and 95% CI
-    colors = Makie.to_colormap(:seaborn_dark)
-    set_theme!(palette = (; color = colors), fontsize = 20)
+        realizations = vcat( realizations... )  # Convert vector of matrices to a single matrix
+        # 4. Calculate 95% Confidence Interval
+        lower_ci = map(x -> quantile( vec(x), 0.025), eachcol(realizations))
+        upper_ci = map(x -> quantile( vec(x), 0.975), eachcol(realizations))
+        mean_prediction = mean(realizations, dims=1)
 
-    fig = Figure(size = (800, 400), figure_padding = (5, 20, 5, 5))
-    ax = Axis(fig[1, 1],
-        xlabel = L"\mathrm{Time}",
-        ylabel = L"\mathrm{Value}",
-        xgridvisible = true, ygridvisible = true
-    )
+        # 5. Plot Ground Truth and 95% CI
+        colors = Makie.to_colormap(:seaborn_dark)
+        set_theme!(palette = (; color = colors), fontsize = 21)
 
-    time_points = 1:size(ground_truth, 2)
-    lines!(ax, time_points, ground_truth[1, :], color = colors[1], linewidth = 3, label = L"\mathrm{Ground\ Truth}")
-    band!(ax, time_points, lower_ci, upper_ci, color = (colors[2], 0.3), label = L"\mathrm{95\%\ CI}")
-    lines!(ax, time_points, mean_prediction, color = colors[3], linewidth = 2, linestyle = :dash, label = L"\mathrm{Mean\ Prediction}")
+        fig = Figure(size = (900, 350), figure_padding = (5, 5, 5, 5))
+        ax = Axis(fig[1, 1],
+            xlabel = L"\mathrm{Time}",
+            ylabel = L"\mathrm{Value}",
+            xgridvisible = true, ygridvisible = true,
+            xlabelsize = 24, ylabelsize = 24,
+        )
 
-    axislegend(ax, position = :rt, framevisible = false)
+        time_points = 1:size(ground_truth, 2)
+        lines!(ax, time_points, ground_truth[1, :],
+                color = colors[1],
+                linewidth = 3,
+                label = L"\mathrm{Ground\ Truth}")
+        band!(ax, time_points, lower_ci, upper_ci,
+                color = (colors[1], 0.3),
+                label = L"\mathrm{95\%\ CI}")
+        lines!(ax, time_points[:], mean_prediction[:],
+                color = colors[3],
+                linewidth = 2,
+                linestyle = :dash,
+                label = L"\mathrm{Mean}")
+
+        axislegend(ax, position = :rt, framevisible = false)
+
+    else
+        Ndata = 200+10
+        init = 12.577, 19.471, 23.073
+        dt = 1.0
+        for ii in 1:1000
+            params = sampled_params[ii, :]
+            realizations[ii] = lorenz_solve( init, params, Ndata; dt = dt )
+        end
+        # realizations = vcat( realizations... )
+        realizations = sum( realizations )
+        realizations = realizations ./ 1000.0
+        t = ( 0:Ndata ) .* dt
+        t = t[11:end]
+
+        fig = Figure(size = (1200, 400), figure_padding = (1, -70, 1, -28), fontsize = 26)
+        ax_ts = Axis(fig[1, 1],
+            xlabel = L"\mathrm{Time}",
+            xgridvisible = true, ygridvisible = true,
+            xticklabelsize = 22, yticklabelsize = 22
+        )
+        # Plot x, y, z time series
+        labels_raw = ["x", "y", "z"]
+        for i in 1:3
+            # Create upright LaTeX label: $\mathrm{x}$, $\mathrm{y}$, etc.
+            lbl = latexstring("\\mathrm{" * labels_raw[i] * "}")
+            lines!(ax_ts, t, ground_truth[i, :], linewidth = 2, label = lbl)
+            lines!(ax_ts, t, R[i, :], linewidth = 2, label = lbl)
+        end
+        axislegend(ax_ts, position = (0.5, 0.025), framevisible = false)
+
+
+        # --- 4. Right Panel: Butterfly Attractor (3D) ---
+        # Spanning column 3 (1/3rd of width)
+        ax_3d = Axis3(fig[1, 2],
+            azimuth = -8*pi/19,
+            elevation = 0.4, # Adjusted for better view
+            xlabel = L"\mathrm{x}",
+            ylabel = L"\mathrm{y}",
+            zlabel = L"\mathrm{z}",
+            xlabeloffset = 30, zlabeloffset = 40, ylabeloffset = 50,
+            xticklabelsize = 22, yticklabelsize = 22, zticklabelsize = 22,
+            # viewmode = :fit
+        )
+
+        # Plot the full trajectory (or a subset if it's too dense)
+        lines!(ax_3d, R[1, :], R[2, :], R[3, :], linewidth = 1.0 )
+        lines!(ax_3d, ground_truth[1, :], ground_truth[2, :], ground_truth[3, :], linewidth = 1.0, color = :red)
+
+        # --- 5. Final Adjustments ---
+        colgap!(fig.layout, 1)
+    end
 
     return fig, ax
 end
