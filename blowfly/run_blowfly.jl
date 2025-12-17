@@ -47,7 +47,7 @@ function run_blowfly()
 
     #### OPTIONS FOR RUN ####
     ## Which dataset to use for blowflies.csv
-    dataset = 2  # 1-4, for data in blowflies.csv
+    dataset = 3  # 1-4, for data in blowflies.csv
 
     ## Methods options
     use_diff = 1
