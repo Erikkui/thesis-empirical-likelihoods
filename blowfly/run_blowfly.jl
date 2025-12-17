@@ -47,7 +47,7 @@ function run_blowfly()
 
     #### OPTIONS FOR RUN ####
     ## Which dataset to use for blowflies.csv
-    dataset = 1  # 1-4, for data in blowflies.csv
+    dataset = 2  # 1-4, for data in blowflies.csv
 
     ## Methods options
     use_diff = 1
@@ -85,7 +85,7 @@ function run_blowfly()
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
     init = 180  # Initial condition for synthetic data
-    N = 200     # Length of synthetic data
+    N = 125     # Length of synthetic data
     burn_in = 0    # Time after which the data is considered "stable"
     t = N+1  # Time vector from 0 to N
     nepo = 1

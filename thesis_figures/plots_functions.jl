@@ -35,7 +35,7 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
         error("Burn-in length ($burn_in) exceeds chain length.")
     end
     chain = raw_chain[burn_in+1:end, :]
-    n_samples, n_params = size(chain)
+    n_total_samples, n_params = size(raw_chain)
 
     if n_params != length(param_names)
         error("Parameter names count ($(length(param_names))) != data columns ($n_params).")
@@ -72,7 +72,8 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
 
     # 5. Plotting Loop
     for i in 1:n_params
-        data_vec = chain[:, i]
+        full_vec = raw_chain[:, i]
+        burned_vec = chain[:, i]
         param_tex = latexstring("\\mathrm{" * param_names[i] * "}")
 
         # --- NEW: HistChain Logic ---
@@ -100,11 +101,15 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
             linkyaxes!(ax_chain, ax_hist)
 
             # Plot Data
-            iterations = (burn_in+1):(burn_in+n_samples)
-            lines!(ax_chain, iterations, data_vec, linewidth=1.5)
+            lines!(ax_chain, 1:n_total_samples, full_vec, linewidth=1.5)
 
-            # Rotated Density (direction=:x makes it horizontal)
-            hist!(ax_hist, data_vec, normalization = :pdf, direction = :x, strokewidth = 1, color = colors[3], strokecolor = :black, bins = 20)
+            # Burn-in Line
+            if burn_in > 0
+                vlines!(ax_chain, [burn_in], color = (:grey, 0.8), linestyle = :dash, linewidth = 2.0)
+            end
+
+            # Rotated Density using burned chain (direction=:x makes it horizontal)
+            hist!(ax_hist, burned_vec, normalization = :pdf, direction = :x, strokewidth = 1, color = colors[3], strokecolor = :black, bins = 20)
 
             # True Parameter Lines (Horizontal)
             hlines!(ax_chain, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
@@ -242,7 +247,7 @@ function plot_normality_checks(nc_path::String)
 end
 
 
-function plot_model_predictions(nc_path::String, model_name::String)
+function plot_model_predictions(nc_path::String, model_name::String; burn_in::Int=0, n_samples = 100)
     """
     plot_model_predictions_with_ci(nc_path::String, model_name::String)
 
@@ -252,7 +257,7 @@ function plot_model_predictions(nc_path::String, model_name::String)
 
     # 1. Load Data
     ds = NCDataset(nc_path, "r")
-    chain = ds["chain"][:, :]
+    chain = ds["chain"][burn_in+1:end, :]
     R0_all = ds.attrib["R0_all"]
 
 
@@ -260,35 +265,35 @@ function plot_model_predictions(nc_path::String, model_name::String)
     R0_all_parsed = eval(Meta.parse(R0_all))
     ground_truth = R0_all_parsed[1]  # First matrix of the vector of vector of matrices
 
-    # 2. Randomly Sample 1000 Parameter Vectors
-    n_samples = 1000
+    # 2. Randomly Sample 1000 Parameter Vectors + posterior mean
     n_chain_samples = size(chain, 1)
     param_indices = rand(1:n_chain_samples, n_samples)
     sampled_params = chain[param_indices, :]
+    posterior_mean = mean(chain, dims=1)
+    sampled_params = vcat( sampled_params, posterior_mean )  # Add posterior mean as
+    n_samples += 1  # Update sample count
 
     # 3. Generate Data Based on Model
     model_func = nothing
-    realizations = Vector{Matrix{Float64}}(undef, 1000)
+    realizations = Vector{Matrix{Float64}}(undef, n_samples)
     if model_name == "OU"
-        model_func = OU_solve
         init = 3.0
         Ndata = 200
-        for ii in 1:1000
+        for ii in 1:n_samples
             params = sampled_params[ii, :]
-            realizations[ii] = model_func( params, init, Ndata)
+            realizations[ii] = OU_solve( params, init, Ndata)
         end
     elseif model_name == "L3"
         # model_func = lorenz_solve
 
     elseif model_name == "blowfly"
-        model_func = blowfly_solve
-        init = 180  # Initial condition for synthetic data
-        N = 200     # Length of synthetic data
+        init = parse(Float64, ds.attrib["synth_init"])  # Initial condition for synthetic data
+        t = parse(Int, ds.attrib["synth_N"])     # Length of synthetic data
         burn_in = 0    # Time after which the data is considered "stable"
-        t = N+1  # Time vector from 0 to N
-        for ii in 1:1000
+        # t = N+1  # Time vector from 0 to N
+        for ii in 1:n_samples
             params = sampled_params[ii, :]
-            realizations[ii] = model_func(params, t; n_init = init, burn_in = burn_in)[1]
+            realizations[ii] = blowfly_solve(params, t; N_init = init, burn_in = burn_in)[1]
         end
     else
         error("Invalid model name. Options: 'OU', 'L3', 'blowfly'")
@@ -305,43 +310,48 @@ function plot_model_predictions(nc_path::String, model_name::String)
 
         # 5. Plot Ground Truth and 95% CI
         colors = Makie.to_colormap(:seaborn_dark)
-        set_theme!(palette = (; color = colors), fontsize = 21)
+        set_theme!(palette = (; color = colors), fontsize = 20)
 
         fig = Figure(size = (900, 350), figure_padding = (5, 5, 5, 5))
         ax = Axis(fig[1, 1],
             xlabel = L"\mathrm{Time}",
             ylabel = L"\mathrm{Value}",
             xgridvisible = true, ygridvisible = true,
-            xlabelsize = 24, ylabelsize = 24,
+            xlabelsize = 23, ylabelsize = 23,
         )
 
         time_points = 1:size(ground_truth, 2)
         lines!(ax, time_points, ground_truth[1, :],
                 color = colors[1],
-                linewidth = 3,
+                linewidth = 3.5,
                 label = L"\mathrm{Ground\ Truth}")
+        lines!(ax, time_points[:], realizations[ end, : ],
+            color = colors[2],
+            linewidth = 2.5,
+            linestyle = :solid,
+            label = L"\mathrm{Posterior\ mean}")
+        # lines!(ax, time_points[:], mean_prediction[:],
+        #         color = colors[3],
+        #         linewidth = 2,
+        #         linestyle = :dash,
+        #         label = L"\mathrm{Mean}")
         band!(ax, time_points, lower_ci, upper_ci,
-                color = (colors[1], 0.3),
+                color = (colors[3], 0.2),
                 label = L"\mathrm{95\%\ CI}")
-        lines!(ax, time_points[:], mean_prediction[:],
-                color = colors[3],
-                linewidth = 2,
-                linestyle = :dash,
-                label = L"\mathrm{Mean}")
 
-        axislegend(ax, position = :rt, framevisible = false)
-
+        Legend(fig[2, 1], ax, orientation = :horizontal, framevisible = false, labelsize=23)
+        # colgap!(fig.layout, 0)
     else
         Ndata = 200+10
-        init = 12.577, 19.471, 23.073
+        init = [12.577, 19.471, 23.073]
         dt = 1.0
-        for ii in 1:1000
+        for ii in 1:n_samples
             params = sampled_params[ii, :]
             realizations[ii] = lorenz_solve( init, params, Ndata; dt = dt )
         end
         # realizations = vcat( realizations... )
         realizations = sum( realizations )
-        realizations = realizations ./ 1000.0
+        realizations = realizations ./ n_samples
         t = ( 0:Ndata ) .* dt
         t = t[11:end]
 
