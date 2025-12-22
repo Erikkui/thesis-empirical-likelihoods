@@ -5,7 +5,7 @@ using MathTeXEngine
 using Statistics
 
 
-function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vector{String}; burn_in::Int=0)
+function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vector{String}, true_params; burn_in::Int=0)
     """
     plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vector{String}; burn_in::Int=0)
 
@@ -27,7 +27,6 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
     # else
     #     error("Global attribute 'params' not found in NetCDF file.")
     # end
-    true_params = raw_chain[1, :]
     close(ds)
 
     # 2. Apply Burn-in
@@ -112,8 +111,10 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
             hist!(ax_hist, burned_vec, normalization = :pdf, direction = :x, strokewidth = 1, color = colors[3], strokecolor = :black, bins = 20)
 
             # True Parameter Lines (Horizontal)
-            hlines!(ax_chain, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
-            hlines!(ax_hist, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
+            if !(contains( nc_path, "REAL" ))
+                hlines!(ax_chain, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
+                hlines!(ax_hist, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
+            end
 
             # Set Column Ratios (80% chain, 20% histogram)
             colsize!(fig.layout, 1, Relative(0.8))
@@ -215,12 +216,12 @@ function plot_normality_checks(nc_path::String)
 
     # Plot lines as requested (using explicit colors from your snippet)
     # Slightly thicker lines (2.5) for thesis readability
-    lines!(ax_chi, chi2_x, chi2_hist, color = colors[2], linewidth = 4,
-           label = L"\mathrm{Empirical\ PDF}")
-    lines!(ax_chi, chi2_x, chi2_pdf, color = colors[1], linewidth = 4,
-           label = L"\mathrm{Theoretical\ PDF}")
+    lines!(ax_chi, chi2_x, chi2_hist, color = colors[2], linewidth = 4)
+        #    label = L"\mathrm{Empirical\ PDF}")
+    lines!(ax_chi, chi2_x, chi2_pdf, color = colors[1], linewidth = 4)
+        #    label = L"\mathrm{Theoretical\ PDF}")
 
-    axislegend(ax_chi, position = :rt, framevisible = false)
+    # axislegend(ax_chi, position = :rt, framevisible = false)
 
 
     # --- Right Plot: Q-Q Plot ---
@@ -232,10 +233,10 @@ function plot_normality_checks(nc_path::String)
     )
 
     # 1:1 Reference Line (Red dashed)
-    ablines!(ax_qq, 0, 1, color = colors[2], linewidth = 4, linestyle = :dash)# label = L"1:1\ \mathrm{Line}")
+    ablines!(ax_qq, 0, 1, color = colors[1], linewidth = 4, linestyle = :dash)# label = L"1:1\ \mathrm{Line}")
 
     # Scatter points (Blue)
-    scatter!(ax_qq, qq_theor_q, qq_D_sorted, color = colors[1], markersize = 10,
+    scatter!(ax_qq, qq_theor_q, qq_D_sorted, color = colors[2], markersize = 10,
     )#label = L"\mathrm{Data\ Points}")
 
     # axislegend(ax_qq, position = :lt, framevisible = false)
@@ -337,7 +338,7 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
         #         label = L"\mathrm{Mean}")
         band!(ax, time_points, lower_ci, upper_ci,
                 color = (colors[3], 0.2),
-                label = L"\mathrm{95\%\ CI}")
+                label = L"\mathrm{95\% \ CI}")
 
         Legend(fig[2, 1], ax, orientation = :horizontal, framevisible = false, labelsize=23)
         # colgap!(fig.layout, 0)
@@ -349,9 +350,16 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
             params = sampled_params[ii, :]
             realizations[ii] = lorenz_solve( init, params, Ndata; dt = dt )
         end
+        x = [ r[1, :] for r in realizations ]
+        x = vcat( x... )
+        y = [ r[2, :] for r in realizations ]
+        y = vcat( y... )
+        z = [ r[3, :] for r in realizations ]
+        z = vcat( z... )
+        R = [ mean(x, dims = 1)'; mean(y, dims = 1)'; mean(z, dims = 1)' ]
         # realizations = vcat( realizations... )
-        realizations = sum( realizations )
-        realizations = realizations ./ n_samples
+        # realizations = sum( realizations )
+        # realizations = realizations ./ n_samples
         t = ( 0:Ndata ) .* dt
         t = t[11:end]
 
@@ -393,5 +401,183 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
         colgap!(fig.layout, 1)
     end
 
-    return fig, ax
+    return fig
+end
+
+
+
+
+
+
+# --- Helper: HPD Calculation ---
+function calculate_hpd(samples::Vector{T}, params_true; alpha=0.05) where T <: Real
+    n = length(samples)
+    m = round(Int, n * (1 - alpha))
+    y = sort(samples)
+    ranges = y[m+1:n] - y[1:n-m]
+    min_idx = argmin(ranges)
+
+    posterior_mean = mean(samples)
+    z_score = abs( (params_true - mean(samples)) / std(samples) )
+
+    println("Posterior Mean: ", posterior_mean)
+    println("Posterior Z-score: ", z_score)
+    println("HPD Limits: Lower = ", y[min_idx], ", Upper = ", y[min_idx + m], "\n")
+
+
+    return (lower = y[min_idx], upper = y[min_idx + m])
+end
+
+"""
+    plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String};
+                      burnin::Int=1000,
+                      labels::Vector{String}=String[],
+                      var_name::String="chain")
+
+Creates a thesis-ready forest plot comparing multiple parameters side-by-side.
+Matches the style of `plot_normality_checks`.
+
+# Arguments
+- `file_paths`: Vector of paths to NetCDF files.
+- `param_names`: Vector of LaTeX-formatted strings for x-axis labels (e.g., [L"\\theta_1", L"\\theta_2"]).
+- `labels`: Vector of labels for the y-axis (experiment names).
+"""
+function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String}, params_true;
+                           burnin::Int=1000,
+                           labels::Vector{String}=String[],
+                           var_name::String="chain")
+
+    # 1. Setup Theme (Matching your reference)
+    colors = Makie.to_colormap(:seaborn_dark)
+    # Use the same blue (1) and red/orange (2) as your reference
+    color_main = colors[1]
+    color_ref  = colors[2]
+
+    set_theme!(palette = (; color = colors), fontsize = 24)
+
+    # 2. Data Loading & Processing
+    num_params = length(param_names)
+
+    # Structure: plot_data[param_index] = Vector of (mean, lower, upper, truth, label)
+    plot_data = [ [] for _ in 1:num_params ]
+
+    # We capture the "global truth" for each parameter from the first file
+    global_truths = fill(NaN, num_params)
+
+    for (file_idx, path) in enumerate(file_paths)
+        println("------------------- Processing file: ", split(path, "/")[end], " -------------------")
+        if !isfile(path)
+            @warn "File not found: $path"
+            continue
+        end
+
+        NCDataset(path, "r") do ds
+            if !haskey(ds, var_name)
+                error("Variable '$var_name' not found in $path")
+            end
+
+            raw_chain = ds[var_name][:, :]
+            # Handle 1D vs 2D chains
+            chain_matrix = ndims(raw_chain) == 1 ? reshape(raw_chain, :, 1) : raw_chain
+
+            if size(chain_matrix, 2) < num_params
+                error("File $path has $(size(chain_matrix, 2)) parameters, but $(num_params) names provided.")
+            end
+
+            # Loop over each parameter requested
+            for p in 1:num_params
+                chain_vec = chain_matrix[:, p]
+
+                # Extract Truth (Step 1)
+                # Extract Truth from attribute if available, otherwise use first chain value
+                current_true = params_true[p]
+
+                if file_idx == 1
+                    global_truths[p] = current_true
+                end
+
+                # Burn-in
+                if length(chain_vec) <= burnin
+                    continue
+                end
+                posterior = chain_vec[burnin+1:end]
+
+                # Calculate Stats (HPD)
+                p_mean = mean(posterior)
+                hpd_int = calculate_hpd(posterior, params_true[p])
+
+                lbl = isempty(labels) ? basename(path) : labels[file_idx]
+
+                push!(plot_data[p], (
+                    label = lbl,
+                    mean  = p_mean,
+                    lower = hpd_int.lower,
+                    upper = hpd_int.upper
+                ))
+            end
+        end
+    end
+
+    # 3. Figure Initialization
+    # Adjust width based on number of parameters (e.g., 500 per param)
+    max_width = 1100
+    max_cols = 3
+    n_cols = min(num_params, max_cols)
+    n_rows = ceil(Int, num_params / max_cols)
+    fig_width = max_width
+    fig_height = 400 * n_rows
+    fig = Figure(size = (fig_width, fig_height), figure_padding = (5, 20, 5, 5))
+
+    axes = Axis[]
+
+    # 4. Create Subplots
+    for p in 1:num_params
+        data = plot_data[p]
+        n_items = length(data)
+        y_pos = 1:n_items
+
+        # Extract vectors
+        means = [d.mean for d in data]
+        lowers = [d.lower for d in data]
+        uppers = [d.upper for d in data]
+
+        # Axis Setup
+        # Only show y-tick labels (Experiment Names) on the FIRST plot (Leftmost)
+        show_ylabels = (mod(p - 1, max_cols) == 0)
+        ax_row = div(p - 1, max_cols) + 1
+        ax_col = mod(p - 1, max_cols) + 1
+
+        ax = Axis(fig[ax_row, ax_col],
+            xlabel = latexstring("\\mathrm{" * param_names[p] * "}"),
+            yticks = (y_pos, [d.label for d in data]),
+            yticksvisible = false,
+            ylabel = show_ylabels ? latexstring("\\mathrm{Experiment}") : "",
+            yticklabelsvisible = show_ylabels,
+            xgridvisible = true,
+            ygridvisible = false, # Forest plots usually don't have horizontal grids
+            xlabelsize = 28, ylabelsize = 28,
+            xminorgridvisible = true
+        )
+        push!(axes, ax)
+
+        # Reverse Y-axis so first item is at top
+        ax.yreversed = true
+
+        # A. Reference Line (True Parameter) - Matching your dashed style (color[2])
+        vlines!(ax, [global_truths[p]], color = color_ref, linewidth = 4, linestyle = :dash)
+
+        # B. Interval Bars (The Forest)
+        rangebars!(ax, y_pos, lowers, uppers, direction = :x, color = (colors[8], 0.7), linewidth = 4)
+
+        # C. Means (Dots) - Color Coded for Bias
+        # Logic: Blue (Standard). Red if truth is OUTSIDE interval (Severe Bias)
+        dot_colors = [ (global_truths[p] < d.lower || global_truths[p] > d.upper) ? colors[4] : color_main for d in data ]
+
+        scatter!(ax, means, y_pos, color = dot_colors, markersize = 15)
+    end
+
+    # 5. Final Layout
+    colgap!(fig.layout, 20)
+
+    return fig
 end

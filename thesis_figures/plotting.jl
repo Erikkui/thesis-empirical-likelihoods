@@ -1,4 +1,8 @@
 using Distributions
+using Statistics
+using StatsBase
+using StaticArrays
+using DifferentialEquations
 
 include("plots_functions.jl")
 include("blowfly_solve.jl")
@@ -12,28 +16,41 @@ include("lorenz3.jl")
 # nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
 # nc_paths = joinpath.(dir_path, nc_files)
 # param_names = [ "\\lambda", "\\sigma" ]
+# params_true = [3.0, 2.0]
+# burn_in = 10000
+# n_samples = 1000
 
 
-## L3 params
-# case = "L3"
-# dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/L3/netcdf"
-# nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
-# nc_paths = joinpath.(dir_path, nc_files)
-# param_names = [ "\\sigma", "\\rho", "\\beta" ]
-
-
-# ## Blowfly
-case = "blowfly"
-dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/blowfly/netcdf"
+# L3 params
+case = "L3"
+dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/L3/netcdf"
 nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
 nc_paths = joinpath.(dir_path, nc_files)
-println( nc_paths )
-param_names = [ "P", "N_0", "\\delta", "\\sigma^2_p", "\\tau", "\\sigma^2_d" ]
-burn_in = 15000
+param_names = [ "\\sigma", "\\rho", "\\beta" ]
+params_true = [10.0, 28.0, 8/3]
+burn_in = 10000
+n_samples = 1
+
+# ## Blowfly
+# case = "blowfly"
+# dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/blowfly/netcdf"
+# nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
+# nc_paths = joinpath.(dir_path, nc_files)
+# println( nc_paths )
+# param_names = [ "P", "N_0", "\\delta", "\\sigma^2_p", "\\tau", "\\sigma^2_d" ]
+# delta = 0.16
+# P = 6.5
+# N_0 = 400
+# sigma_p = 0.1
+# tau = 14
+# sigma_d = 0.1
+# params_true = [ delta, P, N_0, sigma_p, tau, sigma_d ]
+# burn_in = 15000
+# n_samples = 1000
 ##
 
 
-for file in nc_paths[ [2, 4, 5, 6, 7]]
+for file in nc_paths
     prinname = split( file, "/" )[end]
     println( "Processing file: "*prinname )
     name = split( file, "_" )[end]
@@ -45,12 +62,20 @@ for file in nc_paths[ [2, 4, 5, 6, 7]]
     display( fig )
     save( name*"_normality.pdf", fig )
 
-    fig, ax = plot_mcmc_results(file, :histchain, param_names, burn_in=burn_in)
-    display( fig )
-    save( name*"_mcmc.pdf", fig )
+    # fig, ax = plot_mcmc_results(file, :histchain, param_names, params_true; burn_in=burn_in)
+    # display( fig )
+    # save( name*"_mcmc.pdf", fig )
 
-    fig, ax = plot_model_predictions(file, case; burn_in=burn_in, n_samples=100)
-    display( fig )
-    save( name*"_predictions.pdf", fig )
+    # fig = plot_model_predictions(file, case; burn_in=burn_in, n_samples=n_samples)
+    # display( fig )
+    # save( name*"_predictions.pdf", fig )
 
 end
+#
+
+# labels = string.(collect(1:length(nc_paths)))
+# fig = plot_forest_multi(nc_paths, param_names, params_true; labels = labels, burnin=burn_in)
+# display( fig )
+
+# name = case*"_forest.pdf"
+# save( joinpath( pwd(), "thesis_figures", case, name ), fig )

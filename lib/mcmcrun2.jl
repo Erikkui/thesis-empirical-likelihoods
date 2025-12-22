@@ -48,6 +48,7 @@ function mcmcrun2(model::Dict{Symbol, Any},
 
     n_accepted = 0
     n_stuck    = 0
+    n_stuck_kicks = 0
 
     iter = ProgressBar(1:chain_length)
     try
@@ -80,6 +81,7 @@ function mcmcrun2(model::Dict{Symbol, Any},
                     ss_recalc = ssfun(params_current, data)
                     ss_current = ss_recalc
                     n_stuck = 0 # Reset counter
+                    n_stuck_kicks += 1
                 end
             end
 
@@ -154,5 +156,6 @@ function mcmcrun2(model::Dict{Symbol, Any},
         results_new[:Chain] = vcat(results_prev[:Chain], chain)
     end
 
+    println( "Percentage of stuck re-evaluations: ", n_stuck_kicks/chain_length )
     return chain, sschain, results_new
 end

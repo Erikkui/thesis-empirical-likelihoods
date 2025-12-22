@@ -20,7 +20,7 @@ function lorenz_solve(init, theta, Ndata; dt=1.0)
     # 2. Use StaticArrays for Inputs
     # Generate noise element-wise to avoid allocating a Vector{Float64}
     noise = SVector(randn(), randn(), randn())
-    u0 = SVector{3}(init) .* (1.0 .+ 0.01 .* noise)
+    u0 = SVector{3}(init) #.* (1.0 .+ 0.01 .* noise)
     p  = SVector{3}(theta)
 
     # 3. Smart Saving (No Slicing)

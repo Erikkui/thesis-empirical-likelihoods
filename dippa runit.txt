@@ -36,9 +36,7 @@ blowfly
     05. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2
     06. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 4
     07. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 1
-    08. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, ndata = 126 (4 peaks)
-    09. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 2
-    10. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 3
+    08. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, ndata = 125 (4 peaks)
 
 
 L63

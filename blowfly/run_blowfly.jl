@@ -47,7 +47,7 @@ function run_blowfly()
 
     #### OPTIONS FOR RUN ####
     ## Which dataset to use for blowflies.csv
-    dataset = 3  # 1-4, for data in blowflies.csv
+    dataset = 2  # 1-4, for data in blowflies.csv
 
     ## Methods options
     use_diff = 1
@@ -62,7 +62,7 @@ function run_blowfly()
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 1 # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [ 1, 2 ] # Neighbors to consider for chamfer distance
-    nsim = 200  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nsim = 50  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
     nrep = 1 # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
@@ -70,7 +70,7 @@ function run_blowfly()
     resample = 1    # 0 for no resampling, 1 for resampling
     res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
-    window = 80
+    window = 70
 
     #### MCMC OPTIONS ####
     nsimu = 30000   # MCMC chain length
@@ -85,7 +85,7 @@ function run_blowfly()
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
     init = 180  # Initial condition for synthetic data
-    N = 125     # Length of synthetic data
+    N = 200     # Length of synthetic data
     burn_in = 0    # Time after which the data is considered "stable"
     t = N+1  # Time vector from 0 to N
     nepo = 1
