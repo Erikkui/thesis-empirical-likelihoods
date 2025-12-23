@@ -22,35 +22,35 @@ include("lorenz3.jl")
 
 
 # L3 params
-case = "L3"
-dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/L3/netcdf"
-nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
-nc_paths = joinpath.(dir_path, nc_files)
-param_names = [ "\\sigma", "\\rho", "\\beta" ]
-params_true = [10.0, 28.0, 8/3]
-burn_in = 10000
-n_samples = 1
-
-# ## Blowfly
-# case = "blowfly"
-# dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/blowfly/netcdf"
+# case = "L3"
+# dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/L3/netcdf"
 # nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
 # nc_paths = joinpath.(dir_path, nc_files)
-# println( nc_paths )
-# param_names = [ "P", "N_0", "\\delta", "\\sigma^2_p", "\\tau", "\\sigma^2_d" ]
-# delta = 0.16
-# P = 6.5
-# N_0 = 400
-# sigma_p = 0.1
-# tau = 14
-# sigma_d = 0.1
-# params_true = [ delta, P, N_0, sigma_p, tau, sigma_d ]
-# burn_in = 15000
-# n_samples = 1000
+# param_names = [ "\\sigma", "\\rho", "\\beta" ]
+# params_true = [10.0, 28.0, 8/3]
+# burn_in = 10000
+# n_samples = 1
+
+## Blowfly
+case = "blowfly"
+dir_path = "/home/eki/GitHub/thesis-empirical-likelihoods/blowfly/netcdf"
+nc_files = filter(f -> endswith(f, ".nc"), readdir(dir_path))
+nc_paths = joinpath.(dir_path, nc_files)
+println( nc_paths )
+param_names = [ "P", "N_0", "\\delta", "\\sigma^2_p", "\\tau", "\\sigma^2_d" ]
+delta = 0.16
+P = 6.5
+N_0 = 400
+sigma_p = 0.1
+tau = 14
+sigma_d = 0.1
+params_true = [ delta, P, N_0, sigma_p, tau, sigma_d ]
+burn_in = 15000
+n_samples = 1000
 ##
 
 
-for file in nc_paths
+for file in nc_paths[end-1:end-1]
     prinname = split( file, "/" )[end]
     println( "Processing file: "*prinname )
     name = split( file, "_" )[end]
@@ -58,9 +58,9 @@ for file in nc_paths
     name = case*"_result_"*name
     name = joinpath( pwd(), "thesis_figures", case, name )
 
-    fig, ax = plot_normality_checks(file)
-    display( fig )
-    save( name*"_normality.pdf", fig )
+    # fig, ax = plot_normality_checks(file)
+    # display( fig )
+    # save( name*"_normality.pdf", fig )
 
     # fig, ax = plot_mcmc_results(file, :histchain, param_names, params_true; burn_in=burn_in)
     # display( fig )

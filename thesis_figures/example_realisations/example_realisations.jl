@@ -114,25 +114,22 @@ set_theme!(palette = (; color = colors))
 # end
 
 # Blowfly model
-t_max = 400
+t_max = 200
 tt = range( 0, t_max, t_max )  # Time vector from 0 to N with N+1 points
 
 delta = 0.16
 P = 6.5
 N_0 = 400
-sigma_p = 0.1
+sigma_p =2
 tau = 14
-sigma_d = 0.1
+sigma_d = 2
 theta = [ delta, P, N_0, sigma_p, tau, sigma_d ]
 
 init = 180
 burn_in = 0
 
 
-
-for nn = 30:5:70
-    fig = Figure( size = (1000, 400), padding = (-20,-20,-20,-20) )
-
+fig = Figure( size = (1000, 400), padding = (-20,-20,-20,-20) )
 ax = Axis( fig[1, 1],
     xgridvisible = true,
     ygridvisible = true,
@@ -140,15 +137,19 @@ ax = Axis( fig[1, 1],
     yticks = 0:2000:6000,
     xticklabelsize = 18, yticklabelsize = 18
 )
+
+for nn = 14:14# Different delay values
+
+
     theta = [ delta, P, N_0, sigma_p, nn, sigma_d ]
     local N_sim, _ = blowfly_solve( theta, t_max, N_init = init, burn_in = burn_in )
     local tt = collect( 0:size( N_sim, 2) - 1 )
     lines!( ax, tt[:], N_sim[:], linewidth = 2.5, label = "tau = $nn" )
+
+end
     ax.xticklabelsize = 18
 ax.yticklabelsize = 18
 axislegend( ax; framevisible = false)
 display( fig )
-end
-
 
 # save( "blowfly_simulation.pdf", fig )

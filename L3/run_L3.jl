@@ -51,10 +51,10 @@ function run_L3()
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
     LL = [ 0]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
+    chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
-    nsim = 10   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 30  # Number of resamplings from simulations (always > 1)
+    nsim = 5   # Number of model simulations per proposal theta (GSL: nsim = 1)
+    nrep = 20  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
@@ -63,7 +63,7 @@ function run_L3()
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 30000   # MCMC chain length
+    nsimu = 10000   # MCMC chain length
     update_int = 15
     adapt_int = 20
     npar = length(theta)
