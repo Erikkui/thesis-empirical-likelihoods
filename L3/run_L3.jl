@@ -10,6 +10,7 @@ using NearestNeighbors
 using CairoMakie
 using NCDatasets
 using ProgressBars
+using StaticArrays
 # using BenchmarkTools: @btime
 
 include("include_lib.jl")
@@ -30,45 +31,40 @@ include_lib( INCLUDE_PATH )  # Recursively includes all functions in lib folder
 
 function run_L3()
     #### DATA LOADING AND SAVING OPTIONS ####
-    synthetic_data = true       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
-    save_netcdf_file = false     # Save NetCDF file
-    # datafile = "blowflies.csv"  # Data file name, used only if synthetic_data = false
+    save_netcdf_file = true     # Save NetCDF file
 
     # Initial parameters for L3 model, also used to generate synthetic data
     theta = [10.0, 28.0, 8/3]
 
     #### OPTIONS FOR RUN ####
-    ## Which dataset to use for blowflies.csv
-    dataset = 2
 
     ## Methods options
     use_diff = 1
     diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
-    use_2D = false  # Use 2D array  [R0; R0_diff] instead of 1D array [R0, R0_diff] for R0 and R0_diff
-    case = "gsl"  # "bsl" or "gsl"
+    case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
-    use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
+    use_log = "nlog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [0]  # 0 for CIL, 1, 2... for ID; -1 to compute ecdf from signal too in addition to distances; -2 to not use distances
+    LL = [ 0]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
     chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
-    resample = 1 # 0 for no resampling, 1 for resampling (possibly to be deprecated)
-    nsim = 1   # Number of model simulations per proposal theta (GSL: nsim = 1)
-    nrep = 10  # Number of resamplings from simulations (always > 1)
+    nsim = 5   # Number of model simulations per proposal theta (GSL: nsim = 1)
+    nrep = 20  # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    res_nrep = 25   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
-    res_nsamp = 20  # Number of resamples for bin calc (BSL/GSL)
+    resample = 1    # 0 for no resampling, 1 for resampling
+    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 5000   # MCMC chain length
-    update_int = 30
+    nsimu = 10000   # MCMC chain length
+    update_int = 15
     adapt_int = 20
     npar = length(theta)
     qcov = Matrix{Float64}( I, npar, npar )*1e-2
@@ -78,18 +74,17 @@ function run_L3()
     ssfun = like_eval
 
     #### SYNTHETIC DATA OPTIONS #### (only needed if synthetic_data = true)
-    init = [12.577, 19.471, 23.073]
+    init = SA[12.577, 19.471, 23.073]
     dt = 1
-    N_end = 100+10
-    nepo = 3
+    N_end = 200+10
+    nepo = 1
 
     # Save options in dictionaries
     data = Dict{Symbol, Any}(
-        :synthetic_data => synthetic_data,
+        :synthetic_data => true,
         :save_figures => save_figures,
         :show_figures => show_figures,
         :save_netcdf => save_netcdf_file,
-        :dataset_num => dataset,
         :use_diff => use_diff,
         :diff_order => diff_order,
         :case => case,
@@ -110,8 +105,7 @@ function run_L3()
         :nepo => nepo,
         :N_end => N_end,
         :minmax => nothing,  # Is filled later
-        :nL => sum( LL .>= -1 ),
-        :use_2D => use_2D,
+        :nL => length(LL),
     )
 
     mcmc_options = Dict{Symbol, Any}(
@@ -128,7 +122,8 @@ function run_L3()
     )
 
     chain, sschain, results, data = L3_main( data, mcmc_options, mcmc_models );
-    println( "Run completed. Acceptance rate: ", results[:accept] )
+    # @profview L3_main( data, mcmc_options, mcmc_models )
+    println( "Run completed. Acceptance rate: ", results[:accept], "\n" )
 
     return chain, sschain, results, data
 end

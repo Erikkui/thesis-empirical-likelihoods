@@ -29,7 +29,7 @@ include_lib( INCLUDE_PATH )  # Recursively includes all functions in lib folder
 
 function run_blowfly()
     #### DATA LOADING AND SAVING OPTIONS ####
-    synthetic_data = true       # Create and use synthetic data
+    synthetic_data = false       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
     save_netcdf_file = true     # Save NetCDF file
@@ -47,11 +47,11 @@ function run_blowfly()
 
     #### OPTIONS FOR RUN ####
     ## Which dataset to use for blowflies.csv
-    dataset = 4  # 1-4, for data in blowflies.csv
+    dataset = 2  # 1-4, for data in blowflies.csv
 
     ## Methods options
     use_diff = 1
-    diff_order = [1, 2]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [ 1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -59,22 +59,23 @@ function run_blowfly()
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ -2, 0]  # 0 for CIL, 1, 2... for ID; -1 to compute ecdf from signal too in addition to distances; -2 to not use distances
-    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
-    chamfer_k = [1, 2, 3] # Neighbors to consider for chamfer distance
-    nsim = 100   # Number of model simulations per proposal theta (GSL: usually nsim = 1)
-    nrep = 10  # Number of resamplings from simulations (always > 1)
+    LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    chamfer = 1 # 0 for no chamfer distance, 1 for chamfer distance
+    chamfer_k = [ 1, 2 ] # Neighbors to consider for chamfer distance
+    nsim = 50  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nrep = 1 # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
-    resample = 1    # 0 for no resampling, 1 for resampling (possibly to be deprecated)
-    res_nrep = 50   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
-    res_nsamp = 10  # Number of resamples for bin calc (BSL/GSL)
+    resample = 1    # 0 for no resampling, 1 for resampling
+    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
+    window = 70
 
     #### MCMC OPTIONS ####
-    nsimu = 1000   # MCMC chain length
-    update_int = 30
-    adapt_int = 50
+    nsimu = 30000   # MCMC chain length
+    update_int = 15
+    adapt_int = 20
     npar = length(theta)
     qcov = Matrix{Float64}( I, npar, npar )*1e-2
 
@@ -118,8 +119,8 @@ function run_blowfly()
         :synth_t => t,
         :nepo => nepo,
         :minmax => nothing,  # Is filled later
-        :nL => sum( LL .>= -1 ),
-        :use_2D => use_2D,
+        :nL => length(LL),
+        :window => window,
     )
 
     mcmc_options = Dict{Symbol, Any}(
@@ -136,6 +137,7 @@ function run_blowfly()
     )
 
     chain, sschain, results, data = blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
+    # @profview blowfly_main( data, mcmc_options, mcmc_models, datafile=datafile );
     println( "Run completed. Acceptance rate: ", results[:accept] )
 
     return chain, sschain, results, data

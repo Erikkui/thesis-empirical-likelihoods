@@ -1,9 +1,9 @@
 function cdf_do( D, data::Dict{Symbol, Any} )
     LL = copy( data[:LL] )
-    nL = sum( LL .>= 0 )
+    nL = data[:nL]
 
-    # If D_xy is found, compute features using kdtree.
-    if haskey(data, :D_xy)
+    # If CIL/ID is calculated
+    if any( LL .>= 1 )
         D_xy = data[:D_xy]
         features = CIL_ID( D, D_xy, LL )
     else
@@ -11,8 +11,8 @@ function cdf_do( D, data::Dict{Symbol, Any} )
     end
 
     # If bins are found, calculate ecdfs and return them; otherwise only return features
-    if isassigned( data[:binss], 1 )
-        bins = data[:binss]
+    if data[:bins_done]
+        bins = data[:bins]
         nbin = data[:nbin]
 
         # Compute CDFs for given bins
