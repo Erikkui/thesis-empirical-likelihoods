@@ -7,8 +7,6 @@ function chi2_test(Y, muu=nothing, iC=nothing)
         Ystd = std(Y, dims=1)
         Y0 = Y .- Yave
         C = cov(Y)
-
-
         iC = inv(C)
     else  # test if the rows of Y follow N(muu,C)
         Yave = mean(Y, dims=1)
@@ -34,13 +32,5 @@ function chi2_test(Y, muu=nothing, iC=nothing)
     probs = (1:n) ./ (n + 1)
     theo_q = quantile.(chisq_dist, probs)
 
-    return D_sq, iC, x, chi_pf, Yave, Ystd, khi_n, theo_q, D_sorted
-end
-
-function chipf(x, df)
-    # CHIPF Chi squared probability density function
-    # CHIPF(x,df), x value, df degrees of freedom
-
-    # Note: In Julia, we can directly use the Chi-square distribution
-    return pdf.( Chisq(df), x)
+    return x, chi_pf, khi_n, theo_q, D_sorted
 end

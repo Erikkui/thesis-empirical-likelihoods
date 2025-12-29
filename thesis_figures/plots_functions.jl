@@ -343,62 +343,62 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
         Legend(fig[2, 1], ax, orientation = :horizontal, framevisible = false, labelsize=23)
         # colgap!(fig.layout, 0)
     else
-        Ndata = 200+10
-        init = [12.577, 19.471, 23.073]
-        dt = 1.0
-        for ii in 1:n_samples
-            params = sampled_params[ii, :]
-            realizations[ii] = lorenz_solve( init, params, Ndata; dt = dt )
-        end
-        x = [ r[1, :] for r in realizations ]
-        x = vcat( x... )
-        y = [ r[2, :] for r in realizations ]
-        y = vcat( y... )
-        z = [ r[3, :] for r in realizations ]
-        z = vcat( z... )
-        R = [ mean(x, dims = 1)'; mean(y, dims = 1)'; mean(z, dims = 1)' ]
+        # Ndata = 200+10
+        # init = [12.577, 19.471, 23.073]
+        # dt = 1.0
+        # for ii in 1:n_samples
+        #     params = sampled_params[ii, :]
+        #     realizations[ii] = lorenz_solve( init, params, Ndata; dt = dt )
+        # end
+        # x = [ r[1, :] for r in realizations ]
+        # x = vcat( x... )
+        # y = [ r[2, :] for r in realizations ]
+        # y = vcat( y... )
+        # z = [ r[3, :] for r in realizations ]
+        # z = vcat( z... )
+        # R = [ mean(x, dims = 1)'; mean(y, dims = 1)'; mean(z, dims = 1)' ]
         # realizations = vcat( realizations... )
         # realizations = sum( realizations )
         # realizations = realizations ./ n_samples
-        t = ( 0:Ndata ) .* dt
-        t = t[11:end]
+        # t = ( 0:Ndata ) .* dt
+        # t = t[11:end]
 
-        fig = Figure(size = (1200, 400), figure_padding = (1, -70, 1, -28), fontsize = 26)
-        ax_ts = Axis(fig[1, 1],
-            xlabel = L"\mathrm{Time}",
-            xgridvisible = true, ygridvisible = true,
-            xticklabelsize = 22, yticklabelsize = 22
-        )
+        # fig = Figure(size = (1200, 400), figure_padding = (1, -70, 1, -28), fontsize = 26)
+        # ax_ts = Axis(fig[1, 1],
+        #     xlabel = L"\mathrm{Time}",
+        #     xgridvisible = true, ygridvisible = true,
+        #     xticklabelsize = 22, yticklabelsize = 22
+        # )
         # Plot x, y, z time series
-        labels_raw = ["x", "y", "z"]
-        for i in 1:3
-            # Create upright LaTeX label: $\mathrm{x}$, $\mathrm{y}$, etc.
-            lbl = latexstring("\\mathrm{" * labels_raw[i] * "}")
-            lines!(ax_ts, t, ground_truth[i, :], linewidth = 2, label = lbl)
-            lines!(ax_ts, t, R[i, :], linewidth = 2, label = lbl)
-        end
-        axislegend(ax_ts, position = (0.5, 0.025), framevisible = false)
+        # labels_raw = ["x", "y", "z"]
+        # for i in 1:3
+        #     Create upright LaTeX label: $\mathrm{x}$, $\mathrm{y}$, etc.
+        #     lbl = latexstring("\\mathrm{" * labels_raw[i] * "}")
+        #     lines!(ax_ts, t, ground_truth[i, :], linewidth = 2, label = lbl)
+        #     lines!(ax_ts, t, R[i, :], linewidth = 2, label = lbl)
+        # end
+        # axislegend(ax_ts, position = (0.5, 0.025), framevisible = false)
 
 
         # --- 4. Right Panel: Butterfly Attractor (3D) ---
         # Spanning column 3 (1/3rd of width)
-        ax_3d = Axis3(fig[1, 2],
-            azimuth = -8*pi/19,
-            elevation = 0.4, # Adjusted for better view
-            xlabel = L"\mathrm{x}",
-            ylabel = L"\mathrm{y}",
-            zlabel = L"\mathrm{z}",
-            xlabeloffset = 30, zlabeloffset = 40, ylabeloffset = 50,
-            xticklabelsize = 22, yticklabelsize = 22, zticklabelsize = 22,
-            # viewmode = :fit
-        )
+        # ax_3d = Axis3(fig[1, 2],
+        #     azimuth = -8*pi/19,
+        #     elevation = 0.4, # Adjusted for better view
+        #     xlabel = L"\mathrm{x}",
+        #     ylabel = L"\mathrm{y}",
+        #     zlabel = L"\mathrm{z}",
+        #     xlabeloffset = 30, zlabeloffset = 40, ylabeloffset = 50,
+        #     xticklabelsize = 22, yticklabelsize = 22, zticklabelsize = 22,
+        #     viewmode = :fit
+        # )
 
         # Plot the full trajectory (or a subset if it's too dense)
-        lines!(ax_3d, R[1, :], R[2, :], R[3, :], linewidth = 1.0 )
-        lines!(ax_3d, ground_truth[1, :], ground_truth[2, :], ground_truth[3, :], linewidth = 1.0, color = :red)
+        # lines!(ax_3d, R[1, :], R[2, :], R[3, :], linewidth = 1.0 )
+        # lines!(ax_3d, ground_truth[1, :], ground_truth[2, :], ground_truth[3, :], linewidth = 1.0, color = :red)
 
         # --- 5. Final Adjustments ---
-        colgap!(fig.layout, 1)
+        # colgap!(fig.layout, 1)
     end
 
     return fig
@@ -428,24 +428,26 @@ function calculate_hpd(samples::Vector{T}, params_true; alpha=0.05) where T <: R
     return (lower = y[min_idx], upper = y[min_idx + m])
 end
 
-"""
-    plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String};
-                      burnin::Int=1000,
-                      labels::Vector{String}=String[],
-                      var_name::String="chain")
 
-Creates a thesis-ready forest plot comparing multiple parameters side-by-side.
-Matches the style of `plot_normality_checks`.
-
-# Arguments
-- `file_paths`: Vector of paths to NetCDF files.
-- `param_names`: Vector of LaTeX-formatted strings for x-axis labels (e.g., [L"\\theta_1", L"\\theta_2"]).
-- `labels`: Vector of labels for the y-axis (experiment names).
-"""
 function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String}, params_true;
                            burnin::Int=1000,
                            labels::Vector{String}=String[],
                            var_name::String="chain")
+
+    """
+        plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String};
+                        burnin::Int=1000,
+                        labels::Vector{String}=String[],
+                        var_name::String="chain")
+
+    Creates a thesis-ready forest plot comparing multiple parameters side-by-side.
+    Matches the style of `plot_normality_checks`.
+
+    # Arguments
+    - `file_paths`: Vector of paths to NetCDF files.
+    - `param_names`: Vector of LaTeX-formatted strings for x-axis labels (e.g., [L"\\theta_1", L"\\theta_2"]).
+    - `labels`: Vector of labels for the y-axis (experiment names).
+    """
 
     # 1. Setup Theme (Matching your reference)
     colors = Makie.to_colormap(:seaborn_dark)

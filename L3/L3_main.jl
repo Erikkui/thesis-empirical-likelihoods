@@ -17,7 +17,7 @@ function L3_main( data, options, model; datafile = nothing )
     ax = Axis(fig[1, 1], title="Khi2 test")
     ax2 = Axis(fig[1, 2], title="Q-Q plot")
     # the cdf vectors by the khi2 test:
-    nlogl,iC,x,chi_pf,Yave,Ystd,khi_n,theo_q,D_sorted = chi2_test( summary_stats )
+    x, chi_pf, khi_n, theo_q, D_sorted = chi2_test( summary_stats )
     lines!( ax, x, chi_pf, color=:red, label="Chi-square PDF" )
     lines!( ax, x, khi_n, color=:green, label="Chi-square histogram" )
     scatter!(ax2, theo_q, D_sorted, color=:blue, markersize=8)

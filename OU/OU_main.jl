@@ -1,11 +1,7 @@
 
 function OU_main( data, options, model; datafile = nothing )
 
-    if data[:synthetic_data]   # Simulate nepo data sets
-        data = create_synth_data( data )
-    else
-        # To be added?
-    end
+    data = create_synth_data( data )
 
     data[:data_dim] = size( data[:R0][1], 1 )
 
@@ -20,20 +16,20 @@ function OU_main( data, options, model; datafile = nothing )
     fig = Figure();
     ax = Axis(fig[1, 1], title="Khi2 test")
     ax2 = Axis(fig[1, 2], title="Q-Q plot")
-    # the cdf vectors by the khi2 test:
-    nlogl,iC,x,chi_pf,Yave,Ystd,khi_n,theo_q,D_sorted = chi2_test( summary_stats )
+
+    x, chi_pf, khi_n, theo_q, D_sorted = chi2_test( summary_stats )
     lines!( ax, x, chi_pf, color=:red, label="Chi-square PDF" )
     lines!( ax, x, khi_n, color=:green, label="Chi-square histogram" )
     scatter!(ax2, theo_q, D_sorted, color=:blue, markersize=8)
     ablines!(ax2, 0, 1, color=:red, linestyle=:dash) # 1:1 line
     axislegend(ax; position=:rt)
     display( fig )
+
     data[ :chi2_x ] = x
     data[ :chi2_pdf ] = chi_pf
     data[ :chi2_hist ] = khi_n
     data[ :qq_theor_q ] = theo_q
     data[ :qq_D_sorted ] = D_sorted
-    sleep(1)
 
     # Evaluate likelihood before MCMC
     theta = data[:params]

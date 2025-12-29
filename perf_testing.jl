@@ -1,5 +1,0 @@
-using BenchmarkTools
-using Distances
-using LoopVectorization
-using StaticArrays
-using LinearAlgebra

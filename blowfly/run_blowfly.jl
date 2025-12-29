@@ -18,6 +18,7 @@ include("blowfly_main.jl")
 include("create_synth_data.jl")
 include("wrapper.jl")
 
+Random.seed!(1234)
 
 #####   Include functions in lib, set paths
 CASE_NAME = "blowfly"

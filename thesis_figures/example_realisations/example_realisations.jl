@@ -7,29 +7,33 @@ using DifferentialEquations
 using Distributions
 using LaTeXStrings
 using MathTeXEngine
+using Random
 # using StaticArrays
+
+# Set random seed for reproducibility
+Random.seed!(1234)
 
 colors = Makie.to_colormap(:seaborn_dark)
 set_theme!(palette = (; color = colors))
 
 # OU
-# theta = [3, 2]
-# x0 = 4
-# Ndata = 200
-# dt = 0.01
+theta = [3, 2]
+x0 = 4
+Ndata = 200
+dt = 0.01
 
-# tt = ( 0:Ndata ) .* dt
-# fig = Figure( size = (600, 225), padding = 1, fontsize = 13 )
-# ax = Axis( fig[1, 1], height = 200 )
-# for _ in 1:3
-#     local xx = OU_solve( theta, x0, Ndata; dt = dt )
-#     lines!( ax, tt, xx[1, :], linewidth=2.5 )
-# end
-# ax.xticklabelsize = 20
-# ax.yticklabelsize = 20
+tt = ( 0:Ndata ) .* dt
+fig = Figure( size = (600, 225), padding = 1, fontsize = 13 )
+ax = Axis( fig[1, 1], height = 200 )
+for _ in 1:3
+    local xx = OU_solve( theta, x0, Ndata; dt = dt )
+    lines!( ax, tt, xx[1, :], linewidth=2.5 )
+end
+ax.xticklabelsize = 20
+ax.yticklabelsize = 20
 
 # save("OU_simulation.pdf", fig)
-# display(fig)
+display(fig)
 
 # L3
 # begin
@@ -114,42 +118,42 @@ set_theme!(palette = (; color = colors))
 # end
 
 # Blowfly model
-t_max = 200
-tt = range( 0, t_max, t_max )  # Time vector from 0 to N with N+1 points
+# t_max = 200
+# tt = range( 0, t_max, t_max )  # Time vector from 0 to N with N+1 points
 
-delta = 0.16
-P = 6.5
-N_0 = 400
-sigma_p =2
-tau = 14
-sigma_d = 2
-theta = [ delta, P, N_0, sigma_p, tau, sigma_d ]
+# delta = 0.16
+# P = 6.5
+# N_0 = 400
+# sigma_p =2
+# tau = 14
+# sigma_d = 2
+# theta = [ delta, P, N_0, sigma_p, tau, sigma_d ]
 
-init = 180
-burn_in = 0
-
-
-fig = Figure( size = (1000, 400), padding = (-20,-20,-20,-20) )
-ax = Axis( fig[1, 1],
-    xgridvisible = true,
-    ygridvisible = true,
-    xticks = 0:50:t_max,
-    yticks = 0:2000:6000,
-    xticklabelsize = 18, yticklabelsize = 18
-)
-
-for nn = 14:14# Different delay values
+# init = 180
+# burn_in = 0
 
 
-    theta = [ delta, P, N_0, sigma_p, nn, sigma_d ]
-    local N_sim, _ = blowfly_solve( theta, t_max, N_init = init, burn_in = burn_in )
-    local tt = collect( 0:size( N_sim, 2) - 1 )
-    lines!( ax, tt[:], N_sim[:], linewidth = 2.5, label = "tau = $nn" )
+# fig = Figure( size = (1000, 400), padding = (-20,-20,-20,-20) )
+# ax = Axis( fig[1, 1],
+#     xgridvisible = true,
+#     ygridvisible = true,
+#     xticks = 0:50:t_max,
+#     yticks = 0:2000:6000,
+#     xticklabelsize = 18, yticklabelsize = 18
+# )
 
-end
-    ax.xticklabelsize = 18
-ax.yticklabelsize = 18
-axislegend( ax; framevisible = false)
-display( fig )
+# for nn = 14:14# Different delay values
+
+
+#     theta = [ delta, P, N_0, sigma_p, nn, sigma_d ]
+#     local N_sim, _ = blowfly_solve( theta, t_max, N_init = init, burn_in = burn_in )
+#     local tt = collect( 0:size( N_sim, 2) - 1 )
+#     lines!( ax, tt[:], N_sim[:], linewidth = 2.5, label = "tau = $nn" )
+
+# end
+#     ax.xticklabelsize = 18
+# ax.yticklabelsize = 18
+# axislegend( ax; framevisible = false)
+# display( fig )
 
 # save( "blowfly_simulation.pdf", fig )

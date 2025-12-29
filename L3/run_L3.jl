@@ -19,6 +19,7 @@ include("lorenz3.jl")
 include("L3_main.jl")
 include("create_synth_data.jl")
 
+Random.seed!(1234)
 
 #####   Include functions in lib, set paths
 CASE_NAME = "L3"

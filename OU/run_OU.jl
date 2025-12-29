@@ -1,7 +1,7 @@
 using Statistics
 using LinearAlgebra
 using Distributions
-using Random: randperm
+using Random
 using Distances: pairwise, Euclidean
 using StatsBase
 using LoopVectorization
@@ -9,14 +9,16 @@ using NearestNeighbors
 using CairoMakie
 using NCDatasets
 using ProgressBars
-# using BenchmarkTools: @btime
 
+# Include case-specific and library files
 include("include_lib.jl")
 include("wrapper.jl")
 include("OU_solve.jl")
 include("OU_main.jl")
 include("create_synth_data.jl")
 
+# Set random seed for reproducibility
+Random.seed!(1234)
 
 #####   Include functions in lib, set paths
 CASE_NAME = "OU"
