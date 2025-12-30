@@ -11,8 +11,8 @@ using CairoMakie
 using NCDatasets
 using ProgressBars
 using StaticArrays
-# using BenchmarkTools: @btime
 
+# Include necessary files and lib
 include("include_lib.jl")
 include("wrapper.jl")
 include("lorenz3.jl")
@@ -42,17 +42,17 @@ function run_L3()
     #### OPTIONS FOR RUN ####
 
     ## Methods options
-    use_diff = 1
+    use_diff = 0
     diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
-    use_log = "nlog"  # "log" or "nolog" for log transform for summary statistics
+    use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ 0]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
+    LL = [ 0 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
     nsim = 5   # Number of model simulations per proposal theta (GSL: nsim = 1)
     nrep = 20  # Number of resamplings from simulations (always > 1)
@@ -60,11 +60,11 @@ function run_L3()
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nrep = 500   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
 
     #### MCMC OPTIONS ####
-    nsimu = 10000   # MCMC chain length
+    nsimu = 30000   # MCMC chain length
     update_int = 15
     adapt_int = 20
     npar = length(theta)

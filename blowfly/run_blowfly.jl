@@ -30,7 +30,7 @@ include_lib( INCLUDE_PATH )  # Recursively includes all functions in lib folder
 
 function run_blowfly()
     #### DATA LOADING AND SAVING OPTIONS ####
-    synthetic_data = false       # Create and use synthetic data
+    synthetic_data = true       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
     save_netcdf_file = true     # Save NetCDF file
@@ -51,7 +51,7 @@ function run_blowfly()
     dataset = 2  # 1-4, for data in blowflies.csv
 
     ## Methods options
-    use_diff = 1
+    use_diff = 0
     diff_order = [ 1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
@@ -61,15 +61,15 @@ function run_blowfly()
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 1 # 0 for no chamfer distance, 1 for chamfer distance
+    chamfer = 0 # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [ 1, 2 ] # Neighbors to consider for chamfer distance
-    nsim = 50  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
+    nsim = 200  # Number of model simulations per proposal theta (GSL: usually nsim = 1)
     nrep = 1 # Number of resamplings from simulations (always > 1)
     nbin = 10  # Number of bins for summary statistics
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nrep = 500   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
     window = 70
 

@@ -50,7 +50,7 @@ function run_OU()
     ## Methods options
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
-    axis_unif = "xax"  # "xax", "yax", or "log"
+    axis_unif = "yax"  # "xax", "yax", or "log"
     use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
 
     ## Summary statistics calculation options
@@ -69,7 +69,7 @@ function run_OU()
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nrep = 500   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
     window = 80
 
