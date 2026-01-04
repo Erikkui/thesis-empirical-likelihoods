@@ -1,9 +1,16 @@
-function OU_solve( theta, x0, Ndata; dt = 0.1)
+function OU_solve( theta, x0, Ndata; dt = 0.1, rng_seed = nothing )
+
+    if isnothing( rng_seed )
+        local_rng = Random.GLOBAL_RNG
+    else
+        local_rng = MersenneTwister( rng_seed )
+    end
+
     lambda, sigma = theta
     ndim = length(x0)
 
     tt = ( 0:Ndata ) .* dt
-    noise = randn( ndim, length(tt) )
+    noise = randn( local_rng, ndim, length(tt) )
 
     x = zeros( ndim, length(tt) )
     x[:, 1] .= x0

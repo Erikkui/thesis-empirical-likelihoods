@@ -1,4 +1,5 @@
 function create_synth_data( data::Dict{Symbol, Any} )
+
     # Create synthetic data for the blowfly model
     use_diff = data[:use_diff]
     diff_order = data[:diff_order]
@@ -22,7 +23,7 @@ function create_synth_data( data::Dict{Symbol, Any} )
     end
 
     for ii in 1:nepo
-        N, _ = blowfly_solve( params, t, N_init = init, burn_in = burn_in )
+        N, _ = blowfly_solve( params, t, N_init = init, burn_in = burn_in, rng_seed = 42 )
         R0_full[ii] = N
         R0[ii] = N
         if use_diff == 1
@@ -38,6 +39,7 @@ function create_synth_data( data::Dict{Symbol, Any} )
     if use_diff == 1
         data[:R0_diff] = R0_diff
     end
+
 
     return data
 end

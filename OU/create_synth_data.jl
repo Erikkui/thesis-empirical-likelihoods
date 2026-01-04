@@ -19,7 +19,7 @@ function create_synth_data( data::Dict{Symbol, Any} )
     end
 
     for ii in 1:nepo
-        N = OU_solve( params, init, Ndata; dt = dt )
+        N = OU_solve( params, init, Ndata; dt = dt, rng_seed = 42 )
         R0[ii] = N
         if use_diff == 1
             R0_diff_ii = calculate_diffs( N, diff_order, dt)

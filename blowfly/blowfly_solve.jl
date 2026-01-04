@@ -1,5 +1,12 @@
 
-function blowfly_solve( theta, t; N_init = 180, burn_in = 20, mu = 1.0 )
+function blowfly_solve( theta, t; N_init = 180, burn_in = 20, mu = 1.0, rng_seed = nothing )
+
+    if isnothing( rng_seed )
+        local_rng = Random.GLOBAL_RNG
+    else
+        local_rng = MersenneTwister( rng_seed )
+    end
+
     # Unpack parameters
     delta, P, N_0, sigma2_p, tau, sigma2_d = theta
 
@@ -11,8 +18,8 @@ function blowfly_solve( theta, t; N_init = 180, burn_in = 20, mu = 1.0 )
 
     gamma_p = Gamma( mu^2/sigma2_p, sigma2_p/mu )   # Gamma distribution for reproduction rate
     gamma_d = Gamma( mu^2/sigma2_d, sigma2_d/mu )   # Gamma distribution for death rate
-    ee = rand( gamma_p, total_time )                # Reproduction rate noise
-    epsilon = rand( gamma_d, total_time )           # Death rate noise
+    ee = rand( local_rng, gamma_p, total_time )                # Reproduction rate noise
+    epsilon = rand( local_rng, gamma_d, total_time )           # Death rate noise
 
     # Iterate over time steps; first burn in period, then actual simulation
     # Note: We start from lag+1 because we need to access N[ii - lag]

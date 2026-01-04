@@ -112,7 +112,7 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
             hist!(ax_hist, burned_vec, normalization = :pdf, direction = :x, strokewidth = 1, color = colors[3], strokecolor = :black, bins = 20)
 
             # True Parameter Lines (Horizontal)
-            if !(contains( nc_path, "REAL" ))
+            if !(contains( nc_path, "set" ))
                 hlines!(ax_chain, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
                 hlines!(ax_hist, [true_params[i]], color = (colors[2], 0.85), linewidth = 3.75)
             end
@@ -332,11 +332,11 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
                 color = colors[1],
                 linewidth = 3.5,
                 label = L"\mathrm{Ground\ Truth}")
-        lines!(ax, time_points[:], realizations[ end, : ],
-            color = colors[2],
-            linewidth = 2.5,
-            linestyle = :solid,
-            label = L"\mathrm{Posterior\ mean}")
+        # lines!(ax, time_points[:], realizations[ end, : ],
+        #     color = colors[2],
+        #     linewidth = 2.5,
+        #     linestyle = :solid,
+        #     label = L"\mathrm{Posterior\ mean}")
         # lines!(ax, time_points[:], mean_prediction[:],
         #         color = colors[3],
         #         linewidth = 2,
@@ -426,12 +426,7 @@ function calculate_hpd(samples::Vector{T}, params_true; alpha=0.05) where T <: R
     posterior_mean = mean(samples)
     z_score = abs( (params_true - mean(samples)) / std(samples) )
 
-    println("Posterior Mean: ", posterior_mean)
-    println("Posterior Z-score: ", z_score)
-    println("HPD Limits: Lower = ", y[min_idx], ", Upper = ", y[min_idx + m], "\n")
-
-
-    return (lower = y[min_idx], upper = y[min_idx + m])
+    return (lower = y[min_idx], upper = y[min_idx + m]), posterior_mean, z_score
 end
 
 
@@ -479,6 +474,10 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
             continue
         end
 
+        hpds = []
+        post_means = []
+        z_scores = []
+
         NCDataset(path, "r") do ds
             if !haskey(ds, var_name)
                 error("Variable '$var_name' not found in $path")
@@ -513,7 +512,10 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
 
                 # Calculate Stats (HPD)
                 p_mean = mean(posterior)
-                hpd_int = calculate_hpd(posterior, params_true[p])
+                hpd_int, posterior_mean, z_score = calculate_hpd(posterior, params_true[p])
+                push!(hpds, hpd_int)
+                push!(post_means, posterior_mean)
+                push!(z_scores, z_score)
 
                 lbl = isempty(labels) ? basename(path) : labels[file_idx]
 
@@ -521,9 +523,27 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
                     label = lbl,
                     mean  = p_mean,
                     lower = hpd_int.lower,
-                    upper = hpd_int.upper
+                    upper = hpd_int.upper,
+                    zscore = z_score,
                 ))
             end
+
+            println("\n--- Posterior Means ---")
+            for (i, pm) in enumerate(post_means)
+                println("\$", round(pm, sigdigits=3), "\$")
+            end
+
+            println("\n--- Z-Scores ---")
+            for (i, z) in enumerate(z_scores)
+                println("\$", round(z, sigdigits=3), "\$")
+            end
+
+            println("\n--- HPD Intervals ---")
+            for (i, hpd) in enumerate(hpds)
+                println("\$", round(hpd.lower, sigdigits=3), "\$")
+                println("\$", round(hpd.upper, sigdigits=3), "\$")
+            end
+
         end
     end
 
@@ -579,8 +599,8 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
         rangebars!(ax, y_pos, lowers, uppers, direction = :x, color = (colors[8], 0.7), linewidth = 4)
 
         # C. Means (Dots) - Color Coded for Bias
-        # Logic: Blue (Standard). Red if truth is OUTSIDE interval (Severe Bias)
-        dot_colors = [ (global_truths[p] < d.lower || global_truths[p] > d.upper) ? colors[4] : color_main for d in data ]
+        # Logic: Blue (Standard). Red if truth farther than 2 SDs from mean
+        dot_colors = [ (abs(d.zscore) > 2) ? colors[4] : color_main for d in data ]
 
         scatter!(ax, means, y_pos, color = dot_colors, markersize = 15)
     end

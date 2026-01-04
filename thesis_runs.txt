@@ -29,14 +29,14 @@ blowfly
 
     ---
 
-    01. nsim = 200, nrep = 1, eCDF (IN THESIS)
-    02. nsim = 200, nrep = 1, eCDF, diff 1 (IN THESIS)
-    03. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 (IN THESIS)
-    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 (IN THESIS)
-    05. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 4
-    06. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 1 (IN THESIS)
-    07. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, ndata = 125 
-    08. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 3
+    01. nsim = 200, nrep = 1, eCDF 
+    02. nsim = 200, nrep = 1, eCDF, diff 1 (run 1 IN THESIS)
+    03. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 (run 2 IN THESIS)
+    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 (run 3 IN THESIS)
+    05. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, ndata = 125 
+    06. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 3 (run 4 IN THESIS)
+    07. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 4
+    08. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 1 (run 5 IN THESIS)
 
 
 L63

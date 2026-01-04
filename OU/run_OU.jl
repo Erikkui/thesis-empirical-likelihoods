@@ -17,9 +17,6 @@ include("OU_solve.jl")
 include("OU_main.jl")
 include("create_synth_data.jl")
 
-# Set random seed for reproducibility
-Random.seed!(1234)
-
 #####   Include functions in lib, set paths
 CASE_NAME = "OU"
 INCLUDE_PATH = joinpath( pwd(), "lib" )  # Create absolute path to lib
