@@ -48,11 +48,11 @@ function run_blowfly()
 
     #### OPTIONS FOR RUN ####
     ## Which dataset to use for blowflies.csv
-    dataset = 2  # 1-4, for data in blowflies.csv
+    dataset = 1  # 1-4, for data in blowflies.csv
 
     ## Methods options
     use_diff = 0
-    diff_order = [ 1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
+    diff_order = [ 1, 2, 3]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
@@ -61,6 +61,7 @@ function run_blowfly()
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
     LL = [ -1 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+
     chamfer = 0 # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [ 1, 2 ] # Neighbors to consider for chamfer distance
     nsim = 200  # Number of model simulations per proposal theta (GSL: usually nsim = 1)

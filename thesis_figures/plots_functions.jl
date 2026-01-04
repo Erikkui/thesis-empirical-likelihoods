@@ -31,7 +31,8 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
 
     # 2. Apply Burn-in
     if burn_in >= size(raw_chain, 1)
-        error("Burn-in length ($burn_in) exceeds chain length.")
+        println("Burn-in length ($burn_in) exceeds chain length.")
+        burn_in = 0
     end
     chain = raw_chain[burn_in+1:end, :]
     n_total_samples, n_params = size(raw_chain)
@@ -258,9 +259,14 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
 
     # 1. Load Data
     ds = NCDataset(nc_path, "r")
-    chain = ds["chain"][burn_in+1:end, :]
+    chain = ds["chain"][:, :]
     R0_all = ds.attrib["R0_all"]
 
+    if burn_in >= size(chain, 1)
+        println("Burn-in length ($burn_in) exceeds chain length.")
+        burn_in = 0
+    end
+    chain = chain[burn_in+1:end, :]
 
     # Parse R0_all (vector of vector of matrices)
     R0_all_parsed = eval(Meta.parse(R0_all))
@@ -430,7 +436,7 @@ end
 
 
 function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{String}, params_true;
-                           burnin::Int=1000,
+                           burn_in::Int=1000,
                            labels::Vector{String}=String[],
                            var_name::String="chain")
 
@@ -499,10 +505,11 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
                 end
 
                 # Burn-in
-                if length(chain_vec) <= burnin
-                    continue
+                if length(chain_vec) <= burn_in
+                    println("Burn-in length ($burn_in) exceeds chain length.")
+                    burn_in = 0
                 end
-                posterior = chain_vec[burnin+1:end]
+                posterior = chain_vec[burn_in+1:end]
 
                 # Calculate Stats (HPD)
                 p_mean = mean(posterior)

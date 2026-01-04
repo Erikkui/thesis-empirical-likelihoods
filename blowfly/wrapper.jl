@@ -14,6 +14,10 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     diff_order = data[:diff_order]
     use_diff = data[:use_diff]
 
+    if theta[5] > 150
+        return data, nothing
+    end
+
     ######## Initialize data structures; as undef first for conactenation to work
     chamfer_dists = Array{Float64}(undef, case_nsim, 0)
     cdfs = Array{Float64}(undef, case_nsim, 0)
