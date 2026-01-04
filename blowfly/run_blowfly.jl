@@ -1,7 +1,7 @@
 using Statistics
 using LinearAlgebra
 using Distributions
-using Random: randperm
+using Random
 using Distances: pairwise, Euclidean
 using StatsBase
 using LoopVectorization
