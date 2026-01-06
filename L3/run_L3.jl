@@ -1,7 +1,7 @@
 using Statistics
 using LinearAlgebra
 using Distributions
-using Random: randperm
+using Random
 using Distances: pairwise, Euclidean
 using StatsBase
 using DifferentialEquations
@@ -40,7 +40,7 @@ function run_L3()
     #### OPTIONS FOR RUN ####
 
     ## Methods options
-    use_diff = 0
+    use_diff = 1
     diff_order = [1]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
@@ -49,8 +49,8 @@ function run_L3()
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
-    LL = [ 0 ]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
-    chamfer = 0  # 0 for no chamfer distance, 1 for chamfer distance
+    LL = [ 0]  # CIL: 0 for distances, -1 for signal; ID: positive integers for kNN distances
+    chamfer = 1  # 0 for no chamfer distance, 1 for chamfer distance
     chamfer_k = [1, 2] # Neighbors to consider for chamfer distance
     nsim = 5   # Number of model simulations per proposal theta (GSL: nsim = 1)
     nrep = 20  # Number of resamplings from simulations (always > 1)

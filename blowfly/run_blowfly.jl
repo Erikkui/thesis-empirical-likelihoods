@@ -28,7 +28,7 @@ include_lib( INCLUDE_PATH )  # Recursively includes all functions in lib folder
 
 function run_blowfly()
     #### DATA LOADING AND SAVING OPTIONS ####
-    synthetic_data = true       # Create and use synthetic data
+    synthetic_data = false       # Create and use synthetic data
     save_figures = false        # Save figures
     show_figures = true         # Show figures
     save_netcdf_file = true     # Save NetCDF file
@@ -49,12 +49,12 @@ function run_blowfly()
     dataset = 1  # 1-4, for data in blowflies.csv
 
     ## Methods options
-    use_diff = 0
-    diff_order = [ 1, 2, 3]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
     case = "bsl"  # "bsl" or "gsl"
     C_how = "cov"  # "cov" or "don" for standard covariance or Donsker theorem covariance
     axis_unif = "yax"  # "xax", "yax", or "log"
     use_log = "nolog"  # "log" or "nolog" for log transform for summary statistics
+    use_diff = 1
+    diff_order = [ 1, 2 ]  # Orders of differences to calculate, e.g., [1, 2] for first and second order
 
     ## Summary statistics calculation options
     eCDF = 1  # 0 for no eCDF, 1 for eCDF
@@ -68,7 +68,7 @@ function run_blowfly()
 
     ## Resampling options (BSL: bins; GSL: bins and data cov/mean)
     resample = 1    # 0 for no resampling, 1 for resampling
-    res_nrep = 500   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
+    res_nrep = 200   # GSL only: res_nrep*res_nsamp iterations for data cov/mean calculation
     res_nsamp = 40  # Number of resamples for bin calc (BSL/GSL)
     window = 70
 

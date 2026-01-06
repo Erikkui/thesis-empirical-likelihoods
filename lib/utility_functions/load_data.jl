@@ -20,7 +20,7 @@ function load_data( file_name::String, data::Dict{Symbol, Any}; dataset_ind = 1:
     data[:R0_full] = ydata
     data[:nobs] = length( ydata )
     data[:synth_N] = t
-    data[:synth_init] = minimum( ydata )
+    data[:synth_init] = ydata[1]
     data[:synth_dt] = dx
 
     return data

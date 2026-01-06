@@ -85,7 +85,7 @@ function plot_mcmc_results(nc_path::String, plot_type::Symbol, param_names::Vect
                 xticklabelsvisible = (i == n_params),
                 xgridvisible = true, ygridvisible = true,
                 xlabelsize = 28, ylabelsize = 28,
-                # yticks = Makie.WilkinsonTicks(4), # Same tick logic as chains
+                yticks = Makie.WilkinsonTicks(4), # Same tick logic as chains
                 # xticklabelsize = 18, yticklabelsize = 18
             )
 
@@ -205,7 +205,7 @@ function plot_normality_checks(nc_path::String)
 
     # 3. Initialize Figure
     # Width 1200 to match the side-by-side style of previous plots
-    fig = Figure(size = (1100, 400), figure_padding = (5, 20, 5, 5))
+    fig = Figure(size = (1100, 400), figure_padding = (5, 5, 5, 10))
 
     # --- Left Plot: Chi-Square Test ---
     ax_chi = Axis(fig[1, 1],
@@ -332,11 +332,13 @@ function plot_model_predictions(nc_path::String, model_name::String; burn_in::In
                 color = colors[1],
                 linewidth = 3.5,
                 label = L"\mathrm{Ground\ Truth}")
-        # lines!(ax, time_points[:], realizations[ end, : ],
-        #     color = colors[2],
-        #     linewidth = 2.5,
-        #     linestyle = :solid,
-        #     label = L"\mathrm{Posterior\ mean}")
+        if model_name == "blowfly"
+            lines!(ax, time_points[:], realizations[ end, : ],
+            color = colors[2],
+            linewidth = 2.5,
+            linestyle = :solid,
+            label = L"\mathrm{Posterior\ mean}")
+        end
         # lines!(ax, time_points[:], mean_prediction[:],
         #         color = colors[3],
         #         linewidth = 2,
@@ -578,6 +580,7 @@ function plot_forest_multi(file_paths::Vector{String}, param_names::Vector{Strin
 
         ax = Axis(fig[ax_row, ax_col],
             xlabel = latexstring("\\mathrm{" * param_names[p] * "}"),
+            xticks = Makie.WilkinsonTicks(5),
             yticks = (y_pos, [d.label for d in data]),
             yticksvisible = false,
             ylabel = show_ylabels ? latexstring("\\mathrm{Experiment}") : "",

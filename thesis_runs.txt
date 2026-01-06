@@ -11,11 +11,11 @@ OU
 
     ---
 
-    01. nsim = 200, nrep = 1, eCDF
-    02. nsim = 200, nrep = 1, eCDF, diff 1
-    03. nsim = 200, nrep = 1, eCDF, diff 1 2,
-    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1
-    05. nsim = 500, nrep = 1, eCDF, diff 1
+    01. nsim = 200, nrep = 1, eCDF (1:48)
+    02. nsim = 200, nrep = 1, eCDF, diff 1 (2:40)
+    03. nsim = 200, nrep = 1, eCDF, diff 1 2 (3:14)
+    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 (36:23)
+    05. nsim = 500, nrep = 1, eCDF, diff 1 (6:42)
 
 
 blowfly
@@ -29,14 +29,13 @@ blowfly
 
     ---
 
-    01. nsim = 200, nrep = 1, eCDF 
-    02. nsim = 200, nrep = 1, eCDF, diff 1 (run 1 IN THESIS)
-    03. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 (run 2 IN THESIS)
-    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 (run 3 IN THESIS)
-    05. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, ndata = 125 
-    06. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 3 (run 4 IN THESIS)
-    07. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 4
-    08. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 1 (run 5 IN THESIS)
+    01. nsim = 200, nrep = 1, eCDF (0:38)
+    02. nsim = 200, nrep = 1, eCDF, diff 1 (run 1 IN THESIS) (1:21)
+    03. nsim = 200, nrep = 1, eCDF, diff 1 2 (run 2 IN THESIS) (1:54)
+    04. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 (run 3 IN THESIS) (32:26)
+    05. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2 3 (run 4 IN THESIS) (46:22)
+    06. nsim = 200, nrep = 1, eCDF, Chamfer 1 2, diff 1 2, real set 1 
+    07. nsim = 200, nrep = 1, eCDF, diff 1 2, real set 1 
 
 
 L63
@@ -50,8 +49,8 @@ L63
 
     ---
 
-    01. nsim 5,  nrep 20, CIL
-    03. nsim 5,  nrep 20, CIL, diff 1
-    04. nsim 5,  nrep 20, CIL, ID 1 2, diff 1
-    04. nsim 5,  nrep 20, CIL, ID 1 2, Chamfer 1 2, diff 1
-    05. nsim 10, nrep 30, CIL, ID 1 2, Chamfer 1 2, diff 1
+    01. nsim 5,  nrep 20, CIL (4:09)
+    02. nsim 5,  nrep 20, CIL, diff 1 (7:32)
+    03. nsim 5,  nrep 20, CIL, ID 1 2, diff 1 (14:23)
+    04. nsim 5,  nrep 20, CIL, ID 1 2, Chamfer 1 2, diff 1 (19:08)
+    05. nsim 10, nrep 30, CIL, ID 1 2, Chamfer 1 2, diff 1 (50min)

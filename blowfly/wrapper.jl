@@ -14,7 +14,8 @@ function Wrapper(theta::Vector{Float64}, data::Dict{Symbol, Any})
     diff_order = data[:diff_order]
     use_diff = data[:use_diff]
 
-    if theta[5] > 150
+    # early return if delay parameter is definitely too  large (blowfly lifetime max one month)
+    if theta[5] > 60
         return data, nothing
     end
 
