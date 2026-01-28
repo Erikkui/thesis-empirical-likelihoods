@@ -20,7 +20,7 @@ function chi2_test(Y, muu=nothing, iC=nothing)
     chisq_dist = Chisq(k)
 
     # Emprical Histogram (pdf) calculation
-    h = fit( Histogram, vec(D_sq), nbins = 50 )
+    h = fit( Histogram, vec(D_sq), nbins = 100 )
     x = collect( h.edges[1][1:end-1] ) .+ Float64( h.edges[1].step )/2  # Midpoints of histogram bins
     khi = h.weights
     khi_n = khi ./ ( sum(khi) * (x[2] - x[1]) )
