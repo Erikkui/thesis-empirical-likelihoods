@@ -108,12 +108,13 @@ function main()
         cdf_ii, _ = empcdf( x_ii; nx=nbin, x=bins )
         cdfs[ii, :] = vec( cdf_ii )
     end
+    println( size(cdfs) )
 
     x, chi_pf, khi_n, theo_q, D_sorted = chi2_test( cdfs )
 
     fig = plot_chi(x, chi_pf, khi_n)
     display( fig )
-    save("/home/eki/GitHub/thesis-empirical-likelihoods/thesis_figures/example_realisations/example_chi2.pdf", fig)
+    # save("/home/eki/GitHub/thesis-empirical-likelihoods/thesis_figures/example_realisations/example_chi2.pdf", fig)
 end
 
 main()
